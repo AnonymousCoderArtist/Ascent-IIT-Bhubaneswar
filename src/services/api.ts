@@ -1,6 +1,5 @@
 // API service layer — one place for every backend call.
-// Shapes match agents/SHARED_CONTRACT.md. When the backend agent lands real
-// endpoints, only these files change; components stay untouched.
+// Shapes match agents/SHARED_CONTRACT.md + supabase/migrations RPCs.
 
 import { supabase } from "../lib/supabase";
 import type { Profile, Task, CompleteQuestResponse, InventoryItem } from "../types/contract";
@@ -14,16 +13,16 @@ export async function listTasks(): Promise<Task[]> {
     .order("completed", { ascending: true })
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return mapTasks(data ?? []);
+  return (data ?? []).map(mapTask);
 }
 
-export async function createTask(input: NewTaskInput): Promise<Task> {
+export async function createTask(input: Partial<TaskInput>): Promise<Task> {
   const { data, error } = await supabase.from("tasks").insert(mapTaskInput(input)).select().single();
   if (error) throw error;
   return mapTask(data);
 }
 
-export async function updateTask(id: string, input: Partial<NewTaskInput>): Promise<Task> {
+export async function updateTask(id: string, input: Partial<TaskInput>): Promise<Task> {
   const { data, error } = await supabase
     .from("tasks")
     .update(mapTaskInput(input))
@@ -39,7 +38,7 @@ export async function deleteTask(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export interface NewTaskInput {
+export interface TaskInput {
   title: string;
   description?: string;
   category: Task["category"];
@@ -57,20 +56,72 @@ export async function getProfile(): Promise<Profile | null> {
   return data ? mapProfile(data) : null;
 }
 
-// ---- Completion (server-authoritative) ----
+export async function updateDisplayName(name: string): Promise<void> {
+  const { error } = await supabase.from("profiles").update({ display_name: name }).eq("id", (await supabase.auth.getUser()).data.user?.id ?? "");
+  if (error) throw error;
+}
+
+// ---- Completion (server-authoritative via Edge Function -> RPC) ----
 
 export async function completeQuest(taskId: string): Promise<CompleteQuestResponse> {
   const { data, error } = await supabase.functions.invoke("complete-quest", { body: { taskId } });
   if (error) throw error;
+  if (data && typeof data === "object" && "error" in data && !("success" in data)) {
+    throw new Error((data as { message?: string }).message ?? "Completion failed.");
+  }
   return data as CompleteQuestResponse;
 }
 
-// ---- Inventory ----
+// ---- Inventory & store ----
 
 export async function listInventory(): Promise<InventoryItem[]> {
   const { data, error } = await supabase.from("inventory").select("*");
   if (error) throw error;
   return (data ?? []).map(mapInventoryItem);
+}
+
+export interface CatalogItem {
+  key: string;
+  name: string;
+  itemType: "aura" | "outfit" | "weapon" | "title" | "world";
+  essenceCost: number;
+  description: string | null;
+  unlocksAtLevel: number;
+}
+
+export async function listCatalog(): Promise<CatalogItem[]> {
+  const { data, error } = await supabase.from("item_catalog").select("*");
+  if (error) throw error;
+  return (data ?? []).map((r: any) => ({
+    key: r.key,
+    name: r.name,
+    itemType: r.item_type,
+    essenceCost: r.essence_cost,
+    description: r.description,
+    unlocksAtLevel: r.unlocks_at_level ?? 1,
+  }));
+}
+
+export interface QuestExample {
+  id: string;
+  title: string;
+  description: string | null;
+  stat: Task["category"];
+  difficulty: Task["difficulty"];
+  estimatedMinutes: number;
+}
+
+export async function listQuestExamples(): Promise<QuestExample[]> {
+  const { data, error } = await supabase.from("quest_examples").select("*");
+  if (error) throw error;
+  return (data ?? []).map((r: any) => ({
+    id: r.id,
+    title: r.title,
+    description: r.description,
+    stat: r.stat,
+    difficulty: r.difficulty,
+    estimatedMinutes: r.estimated_minutes,
+  }));
 }
 
 // ---- Mapping: snake_case DB -> camelCase contract ----
@@ -93,11 +144,7 @@ function mapTask(row: Row): Task {
   };
 }
 
-function mapTasks(rows: Row[]): Task[] {
-  return rows.map(mapTask);
-}
-
-function mapTaskInput(input: Partial<NewTaskInput>): Row {
+function mapTaskInput(input: Partial<TaskInput>): Row {
   const out: Row = {};
   if (input.title !== undefined) out.title = input.title.trim();
   if (input.description !== undefined) out.description = input.description?.trim() || null;
