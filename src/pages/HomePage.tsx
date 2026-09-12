@@ -14,6 +14,7 @@ import CharacterStage from "../components/character/CharacterStage";
 import QuestCard from "../components/quest/QuestCard";
 import QuestForm, { type QuestFormState } from "../components/quest/QuestForm";
 import WorldCanvas from "../components/world/WorldCanvas";
+import SystemBoot from "../components/system/SystemBoot";
 import { useGameStore } from "../hooks/useGameStore";
 import { seedAwakeningQuestIfEmpty } from "../services/awakeningSeed";
 import { useSystemMessage } from "../components/system/SystemMessage";
@@ -22,6 +23,7 @@ export default function HomePage() {
   const { tasks, loading, error, removeTask, refresh } = useGameStore();
   const { push } = useSystemMessage();
   const [formState, setFormState] = useState<QuestFormState>({ open: false, task: null });
+  const [booting, setBooting] = useState(true);
 
   // PRD 5.3: brand-new players always have an achievable first quest.
   useEffect(() => {
@@ -67,6 +69,8 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-screen bg-void">
+      {booting && <SystemBoot onDone={() => setBooting(false)} />}
+
       {/* Full-viewport HUD stage */}
       <div className="relative h-[100svh] min-h-[560px] overflow-hidden">
         <WorldCanvas />
@@ -123,7 +127,6 @@ export default function HomePage() {
             {active.length} active · {cleared.length} cleared
           </span>
         </div>
-
         {active.length === 0 && cleared.length === 0 ? (
           <div className="hud-frame hud-panel mt-4 rounded-sm p-8 text-center">
             <p className="text-sm text-mist">

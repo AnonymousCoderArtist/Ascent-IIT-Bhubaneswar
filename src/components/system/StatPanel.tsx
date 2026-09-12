@@ -4,12 +4,15 @@ import { Dumbbell, BookOpen, CalendarCheck, HeartPulse, Sparkles, ChevronRight }
 import { levelDisplay, nextHook, thresholdForLevel } from "../../lib/progression";
 import { useGameStore } from "../../hooks/useGameStore";
 import { StreakFlame, EssenceCrystal } from "../ui/GameArt";
+import { useScrambleIn } from "../../lib/animations";
 import type { Profile } from "../../types/contract";
 
 const STAT_ICONS = { STR: Dumbbell, INT: BookOpen, DISC: CalendarCheck, VIT: HeartPulse, CRE: Sparkles };
 
 export default function StatPanel() {
   const { profile } = useGameStore();
+  const attrHeaderRef = useScrambleIn("ATTRIBUTES");
+  const nextHeaderRef = useScrambleIn("NEXT", 0.3);
   if (!profile) return null;
   const p: Profile = profile;
   const disp = levelDisplay(p.totalXp, p.level);
@@ -30,7 +33,7 @@ export default function StatPanel() {
     <aside aria-label="Stats and next level" className="pointer-events-auto flex w-56 flex-col gap-3">
       {/* Current stats */}
       <div className="hud-panel rounded-sm p-4">
-        <h2 className="font-display text-[10px] tracking-[0.35em] text-violet">ATTRIBUTES</h2>
+        <h2 ref={attrHeaderRef} className="font-display text-[10px] tracking-[0.35em] text-violet">ATTRIBUTES</h2>
         <ul className="mt-3 space-y-2.5">
           {stats.map(([key, value]) => {
             const Icon = STAT_ICONS[key as keyof typeof STAT_ICONS];
@@ -77,7 +80,7 @@ export default function StatPanel() {
 
       {/* Next level preview */}
       <div className="hud-panel rounded-sm p-4">
-        <h2 className="font-display text-[10px] tracking-[0.35em] text-arc">NEXT</h2>
+        <h2 ref={nextHeaderRef} className="font-display text-[10px] tracking-[0.35em] text-arc">NEXT</h2>
         <p className="mt-2 flex items-center gap-1 font-display text-xl text-ivory">
           LV.{String(disp.level + 1).padStart(2, "0")}
           <ChevronRight size={16} className="text-violet" aria-hidden="true" />

@@ -1,13 +1,14 @@
 // Reward/level-up orchestration: calls the authoritative completion endpoint,
 // then sequences the visual payoff (XP burst -> LEVEL UP -> evolution reveal).
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { CompleteQuestResponse, Task, Rank } from "../types/contract";
 import * as api from "../services/api";
 import { useGameStore } from "./useGameStore";
 import { useSystemMessage } from "../components/system/SystemMessage";
 import { worldAssetForLevel, characterAssetForLevel, WORLD_MILESTONE_LABELS } from "../lib/milestones";
+import { countUp, shake, radialBurst } from "../lib/animations";
 
 interface RewardEvent {
   id: number;
@@ -99,8 +100,33 @@ function RewardOverlay({ event, level, rank }: { event: RewardEvent; level: numb
   const worldImg = worldAssetForLevel(level);
   const charImg = characterAssetForLevel(level);
 
+  const xpNumRef = useRef<HTMLDivElement>(null);
+  const burstZoneRef = useRef<HTMLDivElement>(null);
+
+  // GSAP juice: count-up XP + impact shake + radial shard burst.
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+    const tweens: (gsap.core.Tween | gsap.core.Timeline)[] = [];
+    if (event.phase === "burst" && xpNumRef.current) {
+      tweens.push(countUp(xpNumRef.current, response.reward.xp, { duration: 0.8, prefix: "+", suffix: " XP" }));
+      tweens.push(shake(xpNumRef.current, 7));
+    }
+    if (event.phase === "levelup" && burstZoneRef.current) {
+      tweens.push(shake(burstZoneRef.current, 10));
+      radialBurst(burstZoneRef.current, 14);
+    }
+    if (event.phase === "evolution" && burstZoneRef.current) {
+      radialBurst(burstZoneRef.current, 20);
+    }
+    return () => {
+      tweens.forEach((t) => t.kill());
+    };
+  }, [event.phase, response.reward.xp]);
+
   return (
     <motion.div
+      ref={burstZoneRef}
       className="pointer-events-none fixed inset-0 z-[100] flex flex-col"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -119,7 +145,7 @@ function RewardOverlay({ event, level, rank }: { event: RewardEvent; level: numb
             <motion.div className="absolute -inset-20 rounded-full bg-violet/20 blur-3xl"
               initial={{ scale: 0.3, opacity: 0 }} animate={{ scale: [0.3, 1.5, 1.2], opacity: [0, 0.9, 0.5] }}
               transition={{ duration: 1.3 }} />
-            <motion.div className="font-display text-5xl text-ivory drop-shadow-[0_0_24px_rgba(139,92,246,0.8)] sm:text-7xl"
+            <motion.div ref={xpNumRef} className="font-display text-5xl text-ivory drop-shadow-[0_0_24px_rgba(139,92,246,0.8)] sm:text-7xl"
               initial={{ scale: 0.7, filter: "blur(10px)" }} animate={{ scale: 1, filter: "blur(0px)" }}
               transition={{ duration: 0.5, ease: "easeOut" }}>
               +{response.reward.xp} XP

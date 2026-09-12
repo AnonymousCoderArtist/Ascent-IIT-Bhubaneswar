@@ -1,11 +1,36 @@
-// LevelBar — bottom progress bar: rank, level, XP progress toward the next level.
+// LevelBar — bottom progress bar: rank badge, level, XP progress with GSAP shine sweep.
 import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 import { levelDisplay } from "../../lib/progression";
 import { useGameStore } from "../../hooks/useGameStore";
 import { RankBadge } from "../ui/GameArt";
+import { countUp } from "../../lib/animations";
 
 export default function LevelBar() {
   const { profile } = useGameStore();
+  const xpTextRef = useRef<HTMLSpanElement>(null);
+  const shineRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!profile || !xpTextRef.current) return;
+    const tween = countUp(xpTextRef.current, profile.totalXp, { duration: 1.2 });
+    return () => {
+      tween.kill();
+    };
+  }, [profile?.totalXp]);
+
+  useEffect(() => {
+    const shine = shineRef.current;
+    if (!shine) return;
+    let x = -120;
+    const id = setInterval(() => {
+      x += 14;
+      if (x > 130) x = -120;
+      shine.style.transform = `translateX(${x}%)`;
+    }, 60);
+    return () => clearInterval(id);
+  }, []);
+
   if (!profile) return null;
   const d = levelDisplay(profile.totalXp, profile.level);
 
@@ -19,7 +44,7 @@ export default function LevelBar() {
               LV.{String(d.level).padStart(2, "0")}
             </span>
             <span className="text-xs tabular-nums text-mist">
-              {d.xpIntoLevel.toLocaleString()} / {d.xpForLevel.toLocaleString()} XP
+              <span ref={xpTextRef}>{d.xpIntoLevel.toLocaleString()}</span> / {d.xpForLevel.toLocaleString()} XP
               <span className="ml-2 hidden text-mist/60 sm:inline">({d.xpToNext.toLocaleString()} to next)</span>
             </span>
           </div>
@@ -37,6 +62,8 @@ export default function LevelBar() {
               animate={{ width: `${d.pct}%` }}
               transition={{ type: "spring", stiffness: 50, damping: 18 }}
             />
+            {/* GSAP shine sweep */}
+            <div ref={shineRef} className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           </div>
         </div>
       </div>
