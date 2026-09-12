@@ -16,6 +16,7 @@ import QuestForm, { type QuestFormState } from "../components/quest/QuestForm";
 import WorldCanvas from "../components/world/WorldCanvas";
 import AmbientLayer from "../components/world/AmbientLayer";
 import SystemBoot from "../components/system/SystemBoot";
+import { StreakWeek, NextQuestNudge } from "../components/system/HabitHooks";
 import { useGameStore } from "../hooks/useGameStore";
 import { seedAwakeningQuestIfEmpty } from "../services/awakeningSeed";
 import { useSystemMessage } from "../components/system/SystemMessage";
@@ -121,42 +122,51 @@ export default function HomePage() {
         </motion.div>
       </div>
 
-      {/* Today's quests */}
+      {/* Habit zone: streak week + nudge + today's quests */}
       <section aria-label="Today's quests" className="relative mx-auto max-w-2xl px-4 pb-16 pt-10">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-sm tracking-[0.35em] text-violet">TODAY&apos;S QUESTS</h2>
-          <span className="text-xs tabular-nums text-mist">
-            {active.length} active · {cleared.length} cleared
-          </span>
-        </div>
-        {active.length === 0 && cleared.length === 0 ? (
-          <div className="hud-frame hud-panel mt-4 rounded-sm p-8 text-center">
-            <p className="text-sm text-mist">
-              No quests registered. The System awaits your first command.
-            </p>
-            <button
-              onClick={() => setFormState({ open: true, task: null })}
-              className="font-display mt-5 rounded-sm border border-violet/50 bg-violet px-6 py-2.5 text-xs uppercase tracking-widest text-ivory"
-            >
-              REGISTER FIRST QUEST
-            </button>
+        <div className="grid gap-4 md:grid-cols-[1fr_240px]">
+          <div>
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-sm tracking-[0.35em] text-violet">TODAY&apos;S QUESTS</h2>
+              <span className="text-xs tabular-nums text-mist">
+                {active.length} active · {cleared.length} cleared
+              </span>
+            </div>
+            {active.length === 0 && cleared.length === 0 ? (
+              <div className="hud-frame hud-panel mt-4 rounded-sm p-8 text-center">
+                <p className="text-sm text-mist">
+                  No quests registered. The System awaits your first command.
+                </p>
+                <button
+                  onClick={() => setFormState({ open: true, task: null })}
+                  className="font-display mt-5 rounded-sm border border-violet/50 bg-violet px-6 py-2.5 text-xs uppercase tracking-widest text-ivory"
+                >
+                  REGISTER FIRST QUEST
+                </button>
+              </div>
+            ) : (
+              <ul className="mt-4 space-y-2.5">
+                <AnimatePresence initial={false}>
+                  {[...active, ...cleared].map((task) => (
+                    <QuestCard
+                      key={task.id}
+                      task={task}
+                      onEdit={(t) => setFormState({ open: true, task: t })}
+                      onDelete={(t) => {
+                        if (confirm(`Delete quest "${t.title}"?`)) removeTask(t.id);
+                      }}
+                    />
+                  ))}
+                </AnimatePresence>
+              </ul>
+            )}
           </div>
-        ) : (
-          <ul className="mt-4 space-y-2.5">
-            <AnimatePresence initial={false}>
-              {[...active, ...cleared].map((task) => (
-                <QuestCard
-                  key={task.id}
-                  task={task}
-                  onEdit={(t) => setFormState({ open: true, task: t })}
-                  onDelete={(t) => {
-                    if (confirm(`Delete quest "${t.title}"?`)) removeTask(t.id);
-                  }}
-                />
-              ))}
-            </AnimatePresence>
-          </ul>
-        )}
+          {/* Retention sidebar */}
+          <div className="flex flex-col gap-4 md:max-w-xs">
+            <StreakWeek />
+            <NextQuestNudge onRegister={() => setFormState({ open: true, task: null })} />
+          </div>
+        </div>
       </section>
 
       <QuestForm state={formState} onClose={() => setFormState({ open: false, task: null })} />
