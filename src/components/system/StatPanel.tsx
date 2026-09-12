@@ -1,8 +1,9 @@
 // StatPanel — right column: current stats, streak, essence, and the next-level preview.
 import { motion } from "framer-motion";
-import { Dumbbell, BookOpen, CalendarCheck, HeartPulse, Sparkles, Flame, Gem, ChevronRight } from "lucide-react";
+import { Dumbbell, BookOpen, CalendarCheck, HeartPulse, Sparkles, ChevronRight } from "lucide-react";
 import { levelDisplay, nextHook, thresholdForLevel } from "../../lib/progression";
 import { useGameStore } from "../../hooks/useGameStore";
+import { StreakFlame, EssenceCrystal } from "../ui/GameArt";
 import type { Profile } from "../../types/contract";
 
 const STAT_ICONS = { STR: Dumbbell, INT: BookOpen, DISC: CalendarCheck, VIT: HeartPulse, CRE: Sparkles };
@@ -59,14 +60,14 @@ export default function StatPanel() {
       {/* Streak + essence */}
       <div className="hud-panel flex items-center justify-between rounded-sm px-4 py-3">
         <div className="flex items-center gap-2">
-          <Flame size={16} className={p.currentStreak > 0 ? "text-amber" : "text-mist/40"} aria-hidden="true" />
+          <StreakFlame size={20} lit={p.currentStreak > 0} />
           <div>
             <p className="font-display text-lg leading-none text-ivory tabular-nums">{p.currentStreak}</p>
             <p className="text-[9px] tracking-widest text-mist uppercase">Streak</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Gem size={16} className="text-essence" aria-hidden="true" />
+          <EssenceCrystal size={20} />
           <div>
             <p className="font-display text-lg leading-none text-ivory tabular-nums">{p.essence.toLocaleString()}</p>
             <p className="text-[9px] tracking-widest text-mist uppercase">Essence</p>

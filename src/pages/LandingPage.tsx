@@ -1,8 +1,10 @@
+// Landing — hero: ASCENT, tagline, ENTER THE SYSTEM, particles + world art.
 import { motion } from "framer-motion";
-import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
 import WorldCanvas from "../components/world/WorldCanvas";
+import { SystemSigil, XpSpark } from "../components/ui/GameArt";
+import { useAuth } from "../hooks/useAuth";
 
 export default function LandingPage() {
   const { session } = useAuth();
@@ -11,46 +13,67 @@ export default function LandingPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-void">
       <WorldCanvas />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(7,8,11,0.9)_75%)]" />
+      {/* Depth vignette */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(7,8,11,0.85)_75%)]" />
+      {/* Horizon glow */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-[radial-gradient(ellipse_at_50%_100%,rgba(109,40,217,0.18),transparent_70%)]" />
+
+      <header className="absolute left-1/2 top-8 z-20 -translate-x-1/2">
+        <SystemSigil size={44} glow />
+      </header>
 
       <main className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 text-center">
-        <motion.p
-          initial={{ opacity: 0, y: 8 }}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-4 text-xs tracking-[0.5em] text-mist"
+          transition={{ delay: 0.15 }}
+          className="mb-5 flex items-center gap-2"
         >
-          A LIFE RPG SYSTEM
-        </motion.p>
+          <XpSpark size={14} />
+          <p className="text-[10px] tracking-[0.55em] text-mist sm:text-xs">A LIFE RPG SYSTEM</p>
+          <XpSpark size={14} />
+        </motion.div>
         <motion.h1
-          initial={{ opacity: 0, scale: 0.96 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="font-display text-7xl text-ivory sm:text-8xl md:text-9xl"
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          className="font-display text-7xl tracking-[0.08em] text-ivory drop-shadow-[0_0_60px_rgba(139,92,246,0.35)] sm:text-8xl md:text-9xl"
         >
           ASCENT
         </motion.h1>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mt-6 max-w-md text-balance text-sm leading-relaxed text-mist sm:text-base"
+          transition={{ delay: 0.4, duration: 0.8 }}
+          className="mt-6 text-balance text-sm leading-relaxed text-mist sm:text-base"
         >
           Your life. Your quests. Your evolution.
         </motion.p>
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="mt-10"
+          transition={{ delay: 0.65 }}
+          className="mt-12"
         >
           <Button
             onClick={() => navigate(session ? "/home" : "/auth")}
-            className="px-10 py-4 text-base"
-            aria-label={session ? "Enter the System" : "Begin — sign up or log in"}
+            className="px-12 py-4 text-base"
           >
-            {session ? "ENTER THE SYSTEM" : "ENTER THE SYSTEM"}
+            ENTER THE SYSTEM
           </Button>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="absolute bottom-10 flex items-center justify-center gap-8 text-[10px] tracking-[0.3em] text-mist/60 sm:gap-14"
+        >
+          <span>QUEST → XP</span>
+          <span className="text-violet" aria-hidden="true">→</span>
+          <span>LEVEL → RANK</span>
+          <span className="text-violet" aria-hidden="true">→</span>
+          <span>WORLD EVOLVES</span>
         </motion.div>
       </main>
     </div>
