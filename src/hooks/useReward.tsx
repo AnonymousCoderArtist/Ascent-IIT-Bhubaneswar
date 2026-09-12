@@ -9,6 +9,7 @@ import { useGameStore } from "./useGameStore";
 import { useSystemMessage } from "../components/system/SystemMessage";
 import { worldAssetForLevel, characterAssetForLevel, WORLD_MILESTONE_LABELS } from "../lib/milestones";
 import { countUp, shake, radialBurst } from "../lib/animations";
+import { RankBadge } from "../components/ui/GameArt";
 import * as sfx from "../lib/sfx";
 
 interface RewardEvent {
@@ -47,15 +48,15 @@ export function RewardProvider({ children }: { children: ReactNode }) {
           `[SYSTEM] QUEST CLEARED. +${response.reward.xp} XP · +${response.reward.attributeXp} ${response.reward.attribute} · +${response.reward.essence} ESSENCE`
         );
 
-        // Phase timing: burst 1.6s -> LEVEL UP -> evolution swap (if milestone).
+        // Phase timing: burst 1.4s -> full-screen LEVEL UP -> evolution swap (if milestone).
         if (leveled) {
-          setTimeout(() => setEvent((e) => (e && e.id === id ? { ...e, phase: "levelup" } : e)), 1600);
+          setTimeout(() => setEvent((e) => (e && e.id === id ? { ...e, phase: "levelup" } : e)), 1400);
           const hasEvolution = response.unlocks.some((u) => u.type === "world" || u.type === "character");
           if (hasEvolution) {
-            setTimeout(() => setEvent((e) => (e && e.id === id ? { ...e, phase: "evolution" } : e)), 3200);
-            setTimeout(() => setEvent((e) => (e && e.id === id ? null : e)), 7600);
+            setTimeout(() => setEvent((e) => (e && e.id === id ? { ...e, phase: "evolution" } : e)), 3800);
+            setTimeout(() => setEvent((e) => (e && e.id === id ? null : e)), 7400);
           } else {
-            setTimeout(() => setEvent((e) => (e && e.id === id ? null : e)), 4200);
+            setTimeout(() => setEvent((e) => (e && e.id === id ? null : e)), 4800);
           }
         } else {
           setTimeout(() => setEvent((e) => (e && e.id === id ? null : e)), 2400);
@@ -179,29 +180,81 @@ function RewardOverlay({ event, level, rank }: { event: RewardEvent; level: numb
         </motion.div>
       )}
 
-      {/* Phase 2: LEVEL UP typography */}
+      {/* Phase 2: FULL-SCREEN LEVEL UP takeover */}
       {event.phase === "levelup" && (
-        <motion.div key="levelup" className="absolute inset-0 grid place-items-center"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <div className="text-center">
-            <motion.div
-              className="font-display text-6xl tracking-[0.12em] sm:text-8xl"
-              style={{ backgroundImage: "linear-gradient(180deg,#F4F4F0 20%,#8B5CF6 130%)", backgroundClip: "text", WebkitBackgroundClip: "text", color: "transparent" }}
-              initial={{ scale: 1.2, filter: "blur(18px)", opacity: 0 }}
-              animate={{ scale: 1, filter: "blur(0px)", opacity: 1 }}
-              transition={{ duration: 0.55, ease: "easeOut" }}>
-              LEVEL UP
-            </motion.div>
-            <motion.p className="mt-5 font-display text-lg tracking-[0.5em] text-violet sm:text-2xl"
-              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-              LV.{String(level).padStart(2, "0")} · {rank}-RANK
-            </motion.p>
-          </div>
-          {[0, 1].map((r) => (
-            <motion.div key={r} className="absolute h-40 w-40 rounded-full border border-violet/60"
-              initial={{ scale: 0.2, opacity: 0.9 }} animate={{ scale: 16, opacity: 0 }}
-              transition={{ duration: 1.6, delay: r * 0.3, ease: "easeOut" }} />
+        <motion.div key="levelup" className="absolute inset-0 overflow-hidden"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}>
+          {/* Hard blackout */}
+          <motion.div className="absolute inset-0 bg-void"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12 }} />
+
+          {/* White flash on impact */}
+          <motion.div className="absolute inset-0 bg-ivory"
+            initial={{ opacity: 0.9 }} animate={{ opacity: 0 }} transition={{ duration: 0.35, ease: "easeOut" }} />
+
+          {/* Expanding shockwave rings */}
+          {[0, 0.18, 0.36].map((d, r) => (
+            <motion.div key={r} className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border border-violet/60"
+              initial={{ scale: 0.2, opacity: 0.9 }} animate={{ scale: 22, opacity: 0 }}
+              transition={{ duration: 1.8, delay: d, ease: "easeOut" }} />
           ))}
+
+          {/* Typography: staggered reveal, massive scale */}
+          <div className="relative grid h-full place-items-center px-6 text-center">
+            <div>
+              <motion.p className="font-display text-xs tracking-[0.7em] text-violet sm:text-sm"
+                initial={{ opacity: 0, letterSpacing: "1.2em" }} animate={{ opacity: 1, letterSpacing: "0.7em" }}
+                transition={{ delay: 0.25, duration: 0.6 }}>
+                [SYSTEM]
+              </motion.p>
+
+              <div className="mt-3 flex flex-col items-center gap-1">
+                {["LEVEL", "UP"].map((word, i) => (
+                  <motion.h2 key={word}
+                    className="font-display text-[22vw] leading-[0.85] sm:text-[11rem] lg:text-[13rem]"
+                    style={{ backgroundImage: "linear-gradient(180deg,#F4F4F0 10%,#C4B5FD 60%,#8B5CF6 120%)", backgroundClip: "text", WebkitBackgroundClip: "text", color: "transparent" }}
+                    initial={{ opacity: 0, scale: 1.35, filter: "blur(24px)" }}
+                    animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                    transition={{ delay: 0.15 + i * 0.18, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}>
+                    {word}
+                  </motion.h2>
+                ))}
+              </div>
+
+              <motion.div className="mt-6 flex items-center justify-center gap-4"
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.65, duration: 0.5 }}>
+                <RankBadge rank={rank} size={52} />
+                <div className="text-left">
+                  <p className="font-display text-3xl text-ivory sm:text-4xl">
+                    LV.{String(level).padStart(2, "0")}
+                  </p>
+                  <p className="mt-0.5 text-[10px] tracking-[0.4em] text-mist">{rank}-RANK</p>
+                </div>
+              </motion.div>
+
+              {/* Rising motes */}
+              {Array.from({ length: 24 }).map((_, i) => (
+                <motion.span key={i}
+                  className="absolute left-1/2 top-1/2 h-1 w-1 rounded-full bg-violet"
+                  initial={{ opacity: 0 }}
+                  animate={{
+                    opacity: [0, 1, 0],
+                    y: [-10, -(120 + Math.random() * 220)],
+                    x: [0, (Math.random() - 0.5) * 260],
+                    scale: [0.5, 1.6, 0.3],
+                  }}
+                  transition={{ duration: 2.2, delay: 0.3 + Math.random() * 1.4, repeat: Infinity, repeatDelay: 0.6 }}
+                  style={{ left: `${20 + Math.random() * 60}%`, top: `${55 + Math.random() * 30}%`, position: "absolute" }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom edge glow line */}
+          <motion.div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-violet to-transparent"
+            initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.5, duration: 0.8 }}
+            style={{ transformOrigin: "center" }} />
         </motion.div>
       )}
 
