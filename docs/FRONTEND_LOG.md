@@ -60,6 +60,14 @@ Layout exactly per user spec:
 
 Only `character-l1.png` + `world-l1.webp` generated so far. `src/lib/milestones.ts` falls back to the latest available tier, so new art is drop-in: `public/character/character-l{2,7,10,15,20,30}.png`, `public/world/world-l{5,10,15,20,30}.webp`.
 
+### Checkpoint 6: GSAP game-feel animation pass
+
+- `src/lib/animations.ts` — GSAP juice layer: `scrambleText` (glyph scramble resolve), `useScrambleIn` hook, `countUp` (number ticker with locale formatting), `shake` (camera-impact timeline), `bootSequence`, `floatLoop`, `radialBurst` (DOM shard burst). All respect `prefers-reduced-motion`.
+- `SystemBoot` — console-style boot overlay on entering /home: staggered `>_ AUTH TOKEN VERIFIED...` lines, sigil pulse reveal (`back.out`), click-to-skip.
+- Reward overlay — XP number GSAP count-up + impact shake on burst; screen shake + 14-shard radial burst on LEVEL UP; 20-shard burst on EVOLUTION.
+- StatPanel — [ATTRIBUTES]/[NEXT] headers scramble-resolve on mount.
+- LevelBar — total-XP count-up ticker + continuous shine sweep across the XP bar.
+
 ### Verification
 
 - `npm run build` — TypeScript strict + Vite build, 0 errors.
