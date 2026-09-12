@@ -4,3 +4,4 @@ dist
 .env.local
 .vtx
 *.local
+tsconfig.tsbuildinfo
