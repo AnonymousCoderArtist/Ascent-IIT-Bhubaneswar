@@ -78,6 +78,20 @@ Only `character-l1.png` + `world-l1.webp` generated so far. `src/lib/milestones.
 - Landing loop row wraps gracefully on narrow screens; scroll chevron desktop-only.
 - StatPanel narrows to w-52 at `sm` so it never crowds the character on small tablets.
 
+### Checkpoint 8: award-pass — WebGL, particles, SFX, habit hooks
+
+- **WorldCanvas rewrite** (`src/components/world/WorldCanvas.tsx`): custom GLSL twinkle shader (per-point scale/speed/offset, additive soft-core), 3 procedural nebula sprites (canvas-generated radial textures, deep parallax), pulsing landmark glow, 3 pooled shooting stars with randomized launches, camera parallax, DPR cap, tab-visibility pause, CSS starfield fallback. Three.js stays a lazy chunk — shell renders first.
+- **AmbientLayer** (`src/components/world/AmbientLayer.tsx`): WAAPI drifting sparkles (10 mobile / 18 desktop, staggered rise+fade) + masked perspective grid floor.
+- **GameArt SVG upgrades**: RankBadge rotating dashed ring, StreakFlame flicker keyframes, EssenceCrystal shimmer facet, SystemSigil ring rotation, LevelHalo counter-rotating rings.
+- **Procedural SFX** (`src/lib/sfx.ts`): pure WebAudio oscillator synthesis — quest clear Cmaj chime, 6-note level-up arpeggio fanfare, evolution swell, register blips, UI ticks, fault buzz. Mute persisted in localStorage, toggle in SystemMenu. Zero audio assets.
+- **Habit hooks** (`src/components/system/HabitHooks.tsx`): StreakWeek 7-day dot strip (loss-aversion cue), NextQuestNudge card with gap-framing copy ("Protect the 3-day chain", "The smallest one first. Momentum compounds."). Duolingo research pattern: small daily action, visible progress, framing the gap not the history.
+- Progress page gained the StreakWeek strip.
+
+### Research-informed notes for post-hackathon
+
+- Streak freezes / grace periods (repair mechanics) are server-authoritative territory — backend agent should own them. The frontend already displays `lastActivityDate` correctly to support it.
+- Variable-reward days (random 2x XP) would need backend RNG; noted as a PRD extension.
+
 ### Verification
 
 - `npm run build` — TypeScript strict + Vite build, 0 errors.

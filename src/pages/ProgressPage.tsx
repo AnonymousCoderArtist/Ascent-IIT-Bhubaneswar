@@ -6,6 +6,7 @@ import { ArrowLeft, Flame, Trophy } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import SystemMenu from "../components/system/SystemMenu";
 import LevelBar from "../components/system/LevelBar";
+import { StreakWeek } from "../components/system/HabitHooks";
 import { useGameStore } from "../hooks/useGameStore";
 import { levelDisplay } from "../lib/progression";
 
@@ -77,6 +78,11 @@ export default function ProgressPage() {
 
         <div className="mt-6">
           <LevelBar />
+        </div>
+
+        {/* Weekly activity */}
+        <div className="mt-8">
+          <StreakWeek />
         </div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
