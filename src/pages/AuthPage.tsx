@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { useAuth } from "../hooks/useAuth";
 import Button from "../components/ui/Button";
 
 export default function AuthPage() {
@@ -10,12 +9,14 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const { session } = useAuth();
   const navigate = useNavigate();
 
-  if (session) {
-    navigate("/home", { replace: true });
-  }
+  useEffect(() => {
+    // Prefill "@" hint from session if redirected here while logged in.
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate("/home", { replace: true });
+    });
+  }, [navigate]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

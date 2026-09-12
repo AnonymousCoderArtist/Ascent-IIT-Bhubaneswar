@@ -83,20 +83,20 @@ export default function HomePage() {
           <ZoneRail />
         </div>
 
-        {/* Right: stats + next level (desktop) */}
-        <div className="absolute right-3 top-1/2 z-30 hidden -translate-y-1/2 sm:right-5 md:block">
+        {/* Right: stats + next level (>= sm) */}
+        <div className="absolute right-3 top-1/2 z-30 hidden -translate-y-1/2 sm:right-5 sm:block">
           <StatPanel />
         </div>
 
         {/* Mobile: compact stats row above the XP bar */}
-        <div className="absolute bottom-16 left-1/2 z-30 w-full max-w-md -translate-x-1/2 px-4 md:hidden">
+        <div className="absolute bottom-24 left-1/2 z-30 w-full max-w-md -translate-x-1/2 px-4 sm:hidden">
           <MobileStats />
         </div>
 
-        {/* Register quest button, top-right */}
+        {/* Register quest button: top-right on mobile, bottom-right on desktop */}
         <button
           onClick={() => setFormState({ open: true, task: null })}
-          className="font-display pointer-events-auto absolute bottom-24 right-3 z-30 flex items-center gap-2 rounded-full border border-violet/60 bg-violet px-4 py-3 text-xs uppercase tracking-widest text-ivory shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-colors hover:bg-violet-deep sm:right-5 md:bottom-28"
+          className="font-display pointer-events-auto absolute right-3 top-20 z-30 flex items-center gap-2 rounded-full border border-violet/60 bg-violet px-4 py-3 text-xs uppercase tracking-widest text-ivory shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-colors hover:bg-violet-deep sm:right-5 md:top-auto md:bottom-28"
           aria-label="Register a new quest"
         >
           <Plus size={16} aria-hidden="true" />
@@ -104,13 +104,13 @@ export default function HomePage() {
         </button>
 
         {/* Bottom: XP bar */}
-        <div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 px-4 sm:bottom-7">
+        <div className="absolute bottom-5 left-1/2 z-30 w-full max-w-3xl -translate-x-1/2 px-4 sm:bottom-7">
           <LevelBar />
         </div>
 
         {/* Scroll hint */}
         <motion.div
-          className="absolute bottom-1.5 left-1/2 z-20 -translate-x-1/2 text-mist/50"
+          className="absolute bottom-1 left-1/2 z-20 hidden -translate-x-1/2 text-mist/50 sm:block"
           animate={{ y: [0, 4, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
           aria-hidden="true"

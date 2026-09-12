@@ -6,12 +6,6 @@ import { useReward } from "../../hooks/useReward";
 
 const STAT_ICONS = { STR: Dumbbell, INT: BookOpen, DISC: CalendarCheck, VIT: HeartPulse, CRE: Sparkles };
 
-const DIFF_COLORS: Record<string, string> = {
-  easy: "text-essence border-essence/30 bg-essence/10",
-  standard: "text-arc border-arc/30 bg-arc/10",
-  hard: "text-danger border-danger/30 bg-danger/10",
-};
-
 export default function QuestCard({
   task,
   onEdit,
@@ -44,7 +38,11 @@ export default function QuestCard({
             {task.title}
           </p>
           <div className="mt-0.5 flex items-center gap-2 text-[10px] text-mist">
-            <span className={`rounded border px-1.5 py-px font-semibold uppercase tracking-wider ${DIFF_COLORS[task.difficulty]}`}>
+            <span className={`rounded border px-1.5 py-px font-semibold uppercase tracking-wider ${
+              task.difficulty === "hard" ? "border-danger/40 text-danger"
+              : task.difficulty === "standard" ? "border-arc/40 text-arc"
+              : "border-essence/40 text-essence"
+            } bg-transparent`}>
               {task.difficulty}
             </span>
             <span className="flex items-center gap-1">

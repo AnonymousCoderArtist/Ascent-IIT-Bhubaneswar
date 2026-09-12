@@ -67,7 +67,7 @@ export default function LandingPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="absolute bottom-10 flex items-center justify-center gap-8 text-[10px] tracking-[0.3em] text-mist/60 sm:gap-14"
+          className="absolute bottom-10 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-6 text-[9px] tracking-[0.25em] text-mist/60 sm:gap-x-6 sm:text-[10px]"
         >
           <span>QUEST → XP</span>
           <span className="text-violet" aria-hidden="true">→</span>

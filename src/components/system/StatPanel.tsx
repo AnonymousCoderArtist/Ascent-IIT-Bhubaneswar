@@ -30,7 +30,7 @@ export default function StatPanel() {
   const nextWorldMilestone = [30, 20, 15, 10, 5].find((l) => l > disp.level);
 
   return (
-    <aside aria-label="Stats and next level" className="pointer-events-auto flex w-56 flex-col gap-3">
+    <aside aria-label="Stats and next level" className="pointer-events-auto flex w-52 flex-col gap-3 lg:w-56">
       {/* Current stats */}
       <div className="hud-panel rounded-sm p-4">
         <h2 ref={attrHeaderRef} className="font-display text-[10px] tracking-[0.35em] text-violet">ATTRIBUTES</h2>

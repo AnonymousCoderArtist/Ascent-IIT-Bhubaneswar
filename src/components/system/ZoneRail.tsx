@@ -28,10 +28,10 @@ export default function ZoneRail() {
             <button
               disabled={!unlocked}
               aria-label={`${zone.name}${unlocked ? "" : ` — unlocks at level ${zone.level}`}`}
-              className={`hud-frame flex h-11 w-11 items-center justify-center rounded-sm transition-all ${
+              className={`flex h-11 w-11 items-center justify-center rounded-sm border transition-all ${
                 unlocked
                   ? "border-violet/30 bg-ink/70 text-violet hover:bg-violet/20"
-                  : "cursor-not-allowed border-ink bg-ink/40 text-mist/40"
+                  : "cursor-not-allowed border-white/5 bg-ink/40 text-mist/40"
               } ${current ? "shadow-[0_0_18px_rgba(139,92,246,0.35)]" : ""}`}
             >
               {unlocked ? <Icon size={18} aria-hidden="true" /> : <Lock size={14} aria-hidden="true" />}
