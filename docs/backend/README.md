@@ -4,18 +4,22 @@
 
 ## Completed
 
-- [x] Database schema with all required tables (profiles, tasks, task_completions, xp_events, inventory, achievements, profile_achievements)
+- [x] Database schema with all required tables (profiles, tasks, task_completions, xp_events, inventory, achievements, profile_achievements, item_catalog, quest_examples)
 - [x] Row Level Security on all user-owned tables
 - [x] XP/level/rank derivation functions (xp_required_for_level, level_from_xp, rank_for_level)
 - [x] Profile auto-creation trigger on auth.users
+- [x] Default inventory seed for new users
 - [x] Server-authoritative complete_quest transaction function
-- [x] Streak calculation with multipliers
-- [x] Achievement system (first_quest, three_day_streak, level_five)
+- [x] Streak calculation with multipliers (5%, 10%, 15%)
+- [x] Achievement system (first_quest, three_day_streak, level_five, speed_run, weekly_master, level_ten)
 - [x] World milestone unlocks (5, 10, 15, 20, 30)
+- [x] Item catalog with Essence costs (7 items)
+- [x] Quest example seeds (6 default quests)
+- [x] Race condition guard (verify_no_duplicate_completion)
 - [x] Reward calculation by difficulty (easy/standard/hard)
-- [x] Error contract with stable error codes
+- [x] Error contract with stable error codes (6 codes)
 - [x] Recommend quest function (deterministic fallback)
-- [x] Seed data (achievements)
+- [x] Edge Function wrappers (complete-quest, recommend-quest)
 - [x] Documentation
 
 ## Not Yet Implemented

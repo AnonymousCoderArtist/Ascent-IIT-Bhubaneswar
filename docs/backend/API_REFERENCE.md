@@ -14,6 +14,8 @@ The frontend calls these via the Supabase JS SDK's `.rpc()` method or Edge Funct
 | `task_completions` | Audit log of completed quests | Read by owner |
 | `xp_events` | XP audit trail | Read by owner |
 | `inventory` | User inventory items | Read/insert by owner |
+| `item_catalog` | Store catalog with Essence costs | Public read |
+| `quest_examples` | Default quest templates | Public read |
 | `achievements` | Achievement catalog (public read) | Public read |
 | `profile_achievements` | User achievement unlocks | Read by owner |
 

@@ -34,6 +34,13 @@ Live log of backend work. Newest entries at the bottom.
 - **Seed data** (`supabase/migrations/003_seed.sql`):
   - Additional achievements: `speed_run`, `weekly_master`, `level_ten`
 
+- **Item catalog & quest seeds** (`supabase/migrations/004_item_catalog_and_seeds.sql`):
+  - `item_catalog` table with Essence costs for store system
+  - 7 catalog items: starter_aura, starter_outfit, aura_i, training_blade, essence_crystal, badge_awakened, forge_outfit
+  - `quest_examples` table with 6 default quest templates (AWAKENING QUEST, FRESH AIR, STUDY SESSION, etc.)
+  - `verify_no_duplicate_completion()` safety check function
+  - Achievement seeds: speed_run, weekly_master, level_ten
+
 ### Backend error codes
 
 | Code | Meaning |
