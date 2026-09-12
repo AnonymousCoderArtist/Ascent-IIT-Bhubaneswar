@@ -179,6 +179,23 @@ as $$
 $$;
 
 -- ============================================================
+-- DEFAULT INVENTORY SEED FOR NEW USER
+-- ============================================================
+create or replace function seed_default_inventory(p_user_id uuid)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into inventory (user_id, item_key, item_type, equipped)
+  values
+    (p_user_id, 'starter_aura', 'aura', true),
+    (p_user_id, 'starter_outfit', 'outfit', false)
+  on conflict (user_id, item_key) do nothing;
+end;
+$$;
+
+-- ============================================================
 -- PROFILE AUTO-CREATION TRIGGER
 -- ============================================================
 create or replace function handle_new_user()
@@ -206,23 +223,6 @@ begin
       after insert on auth.users
       for each row execute function handle_new_user();
   end if;
-end;
-$$;
-
--- ============================================================
--- DEFAULT INVENTORY SEED FOR NEW USER
--- ============================================================
-create or replace function seed_default_inventory(p_user_id uuid)
-returns void
-language plpgsql
-security definer set search_path = public
-as $$
-begin
-  insert into inventory (user_id, item_key, item_type, equipped)
-  values
-    (p_user_id, 'starter_aura', 'aura', true),
-    (p_user_id, 'starter_outfit', 'outfit', false)
-  on conflict (user_id, item_key) do nothing;
 end;
 $$;
 
