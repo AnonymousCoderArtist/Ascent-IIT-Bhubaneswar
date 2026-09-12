@@ -190,6 +190,9 @@ begin
   insert into profiles (id, display_name)
   values (new.id, coalesce(new.raw_user_meta_data ->> 'display_name', 'Player'))
   on conflict (id) do nothing;
+
+  perform seed_default_inventory(new.id);
+
   return new;
 end;
 $$;
