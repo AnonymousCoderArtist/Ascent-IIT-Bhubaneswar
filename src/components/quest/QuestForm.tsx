@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import type { Task } from "../../types/contract";
 import { useGameStore } from "../../hooks/useGameStore";
 import { STAT_META, DIFFICULTY_META } from "../../lib/catalog";
+import * as sfx from "../../lib/sfx";
 
 export interface QuestFormState {
   open: boolean;
@@ -66,7 +67,10 @@ export default function QuestForm({ state, onClose }: { state: QuestFormState; o
     };
     try {
       if (state.task) await editTask(state.task.id, input);
-      else await addTask(input);
+      else {
+        await addTask(input);
+        sfx.questRegistered();
+      }
       onClose();
     } catch (err) {
       console.error(err);

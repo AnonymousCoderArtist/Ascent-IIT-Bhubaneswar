@@ -9,6 +9,7 @@ import { useGameStore } from "./useGameStore";
 import { useSystemMessage } from "../components/system/SystemMessage";
 import { worldAssetForLevel, characterAssetForLevel, WORLD_MILESTONE_LABELS } from "../lib/milestones";
 import { countUp, shake, radialBurst } from "../lib/animations";
+import * as sfx from "../lib/sfx";
 
 interface RewardEvent {
   id: number;
@@ -40,6 +41,7 @@ export function RewardProvider({ children }: { children: ReactNode }) {
         if (!response.success) throw new Error("Completion rejected.");
         const id = rewardId++;
         const leveled = response.progression.leveledUp;
+        sfx.questCleared();
         setEvent({ id, response, phase: "burst" });
         push(
           `[SYSTEM] QUEST CLEARED. +${response.reward.xp} XP · +${response.reward.attributeXp} ${response.reward.attribute} · +${response.reward.essence} ESSENCE`
@@ -103,7 +105,7 @@ function RewardOverlay({ event, level, rank }: { event: RewardEvent; level: numb
   const xpNumRef = useRef<HTMLDivElement>(null);
   const burstZoneRef = useRef<HTMLDivElement>(null);
 
-  // GSAP juice: count-up XP + impact shake + radial shard burst.
+  // GSAP juice: count-up XP + impact shake + radial shard burst + phase SFX.
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) return;
@@ -113,10 +115,12 @@ function RewardOverlay({ event, level, rank }: { event: RewardEvent; level: numb
       tweens.push(shake(xpNumRef.current, 7));
     }
     if (event.phase === "levelup" && burstZoneRef.current) {
+      sfx.levelUp();
       tweens.push(shake(burstZoneRef.current, 10));
       radialBurst(burstZoneRef.current, 14);
     }
     if (event.phase === "evolution" && burstZoneRef.current) {
+      sfx.evolution();
       radialBurst(burstZoneRef.current, 20);
     }
     return () => {
