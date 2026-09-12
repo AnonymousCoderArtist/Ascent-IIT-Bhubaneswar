@@ -67,15 +67,18 @@ export default async function handler(req: Request) {
     const data = await res.json();
 
     if (!res.ok) {
-      const error = data[0] ?? { message: "Unknown error" };
-      const code = error.code ?? "REWARD_TRANSACTION_FAILED";
-      return new Response(JSON.stringify(error), {
-        status: 400,
+      const errorBody = typeof data === "object" && !Array.isArray(data)
+        ? data
+        : (Array.isArray(data) && data[0])
+          ? data[0]
+          : { message: "Unknown error" };
+      return new Response(JSON.stringify(errorBody), {
+        status: res.status ?? 400,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify(data[0] ?? { success: false }), {
+    return new Response(JSON.stringify(Array.isArray(data) ? data[0] : data), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
