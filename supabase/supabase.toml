@@ -1,0 +1,16 @@
+# Supabase Configuration
+# Deploy: supabase db push (applies migrations)
+# Deploy functions: supabase functions deploy complete-quest recommend-quest
+
+project:
+  name: ascent-backend
+
+migrations:
+  path: supabase/migrations
+
+functions:
+  path: supabase/functions
+  verify: true
+
+secrets:
+  - GEMINI_API_KEY
