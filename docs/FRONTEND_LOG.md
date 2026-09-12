@@ -68,6 +68,16 @@ Only `character-l1.png` + `world-l1.webp` generated so far. `src/lib/milestones.
 - StatPanel — [ATTRIBUTES]/[NEXT] headers scramble-resolve on mount.
 - LevelBar — total-XP count-up ticker + continuous shine sweep across the XP bar.
 
+### Checkpoint 7: layout + style audit
+
+- Fixed stats dead zone at 640-768px (StatPanel now shows from `sm` up, mobile strip below `sm` only — no gap where both hidden).
+- Fixed mobile overlap: NEW QUEST button moved to top-right under the menu on small screens (bottom-right on desktop); mobile stats strip sits at bottom-24 clear of the XP bar; XP bar given full-width max-w-3xl constraint.
+- Fixed invisible borders: ZoneRail locked buttons (border-ink on ink bg) now use white/5; QuestCard difficulty chips re-colored with explicit border widths.
+- AuthPage: removed render-time navigate() side effect (React warning) — session redirect moved into useEffect.
+- Inter font actually loaded via Google Fonts (was referenced but never requested).
+- Landing loop row wraps gracefully on narrow screens; scroll chevron desktop-only.
+- StatPanel narrows to w-52 at `sm` so it never crowds the character on small tablets.
+
 ### Verification
 
 - `npm run build` — TypeScript strict + Vite build, 0 errors.
