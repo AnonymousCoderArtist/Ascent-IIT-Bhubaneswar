@@ -1,33 +1,147 @@
-// Minimal placeholder — full System Home build happens on the frontend branch.
-import { useAuth } from "../hooks/useAuth";
-import Button from "../components/ui/Button";
-import { useNavigate } from "react-router-dom";
+// System Home — the main HUD screen.
+// Layout: top-center menu / left zone rail / center character on world bg /
+// right stats + next-level / bottom XP bar / today's quests below the fold.
+
+import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Plus, ChevronDown } from "lucide-react";
+import SystemMenu from "../components/system/SystemMenu";
+import ZoneRail from "../components/system/ZoneRail";
+import StatPanel from "../components/system/StatPanel";
+import LevelBar from "../components/system/LevelBar";
+import CharacterStage from "../components/character/CharacterStage";
+import QuestCard from "../components/quest/QuestCard";
+import QuestForm, { type QuestFormState } from "../components/quest/QuestForm";
+import WorldCanvas from "../components/world/WorldCanvas";
+import { useGameStore } from "../hooks/useGameStore";
+import { useSystemMessage } from "../components/system/SystemMessage";
 
 export default function HomePage() {
-  const { session, signOut } = useAuth();
-  const navigate = useNavigate();
+  const { profile, tasks, loading, error, removeTask } = useGameStore();
+  const { push } = useSystemMessage();
+  const [formState, setFormState] = useState<QuestFormState>({ open: false, task: null });
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-void px-6">
-      <div className="hud-frame hud-panel max-w-md p-10 text-center">
-        <p className="font-display text-xs tracking-[0.4em] text-violet">[SYSTEM ONLINE]</p>
-        <h1 className="font-display mt-3 text-4xl text-ivory">SYSTEM HOME</h1>
-        <p className="mt-3 text-sm text-mist">
-          Signed in as {session?.user?.email ?? "player"}. Full System interface is under construction
-          on the frontend branch.
-        </p>
-        <div className="mt-8 flex justify-center gap-3">
-          <Button onClick={() => navigate("/inventory")} variant="outline">
-            Inventory
-          </Button>
-          <Button onClick={() => navigate("/progress")} variant="outline">
-            Progress
-          </Button>
-          <Button onClick={() => signOut()} variant="danger">
-            Sign out
-          </Button>
+  const active = useMemo(() => tasks.filter((t) => !t.completed), [tasks]);
+  const cleared = useMemo(() => tasks.filter((t) => t.completed), [tasks]);
+
+  if (loading) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-void">
+        <div className="text-center">
+          <p className="font-display text-2xl tracking-widest text-ivory">ASCENT</p>
+          <p className="mt-2 text-xs tracking-[0.3em] text-violet animate-pulse-slow">SYSTEM BOOTING...</p>
         </div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-void px-6">
+        <div className="hud-frame hud-panel max-w-md p-8 text-center">
+          <p className="font-display text-xs tracking-[0.4em] text-danger">[SYSTEM FAULT]</p>
+          <p className="mt-3 text-sm text-mist">{error}</p>
+          <button
+            onClick={() => location.reload()}
+            className="font-display mt-6 rounded-sm border border-violet/50 bg-violet px-6 py-2.5 text-xs uppercase tracking-widest text-ivory"
+          >
+            RECONNECT
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative min-h-screen bg-void">
+      {/* Full-viewport HUD stage */}
+      <div className="relative h-[100svh] min-h-[560px] overflow-hidden">
+        <WorldCanvas />
+        <CharacterStage />
+
+        <SystemMenu />
+
+        {/* Left rail: world zones */}
+        <div className="absolute left-3 top-1/2 z-30 -translate-y-1/2 sm:left-5">
+          <ZoneRail />
+        </div>
+
+        {/* Right: stats + next level */}
+        <div className="absolute right-3 top-1/2 z-30 -translate-y-1/2 sm:right-5">
+          <StatPanel />
+        </div>
+
+        {/* Register quest button, top-right */}
+        <button
+          onClick={() => setFormState({ open: true, task: null })}
+          className="font-display pointer-events-auto absolute bottom-24 right-3 z-30 flex items-center gap-2 rounded-full border border-violet/60 bg-violet px-4 py-3 text-xs uppercase tracking-widest text-ivory shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-colors hover:bg-violet-deep sm:right-5 md:bottom-28"
+          aria-label="Register a new quest"
+        >
+          <Plus size={16} aria-hidden="true" />
+          NEW QUEST
+        </button>
+
+        {/* Bottom: XP bar */}
+        <div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 px-4 sm:bottom-7">
+          <LevelBar />
+        </div>
+
+        {/* Scroll hint */}
+        <motion.div
+          className="absolute bottom-1.5 left-1/2 z-20 -translate-x-1/2 text-mist/50"
+          animate={{ y: [0, 4, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          aria-hidden="true"
+        >
+          <ChevronDown size={16} />
+        </motion.div>
+      </div>
+
+      {/* Today's quests */}
+      <section aria-label="Today's quests" className="relative mx-auto max-w-2xl px-4 pb-16 pt-10">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-sm tracking-[0.35em] text-violet">TODAY&apos;S QUESTS</h2>
+          <span className="text-xs tabular-nums text-mist">
+            {active.length} active · {cleared.length} cleared
+          </span>
+        </div>
+
+        {active.length === 0 && cleared.length === 0 ? (
+          <div className="hud-frame hud-panel mt-4 rounded-sm p-8 text-center">
+            <p className="text-sm text-mist">
+              No quests registered. The System awaits your first command.
+            </p>
+            <button
+              onClick={() => setFormState({ open: true, task: null })}
+              className="font-display mt-5 rounded-sm border border-violet/50 bg-violet px-6 py-2.5 text-xs uppercase tracking-widest text-ivory"
+            >
+              REGISTER FIRST QUEST
+            </button>
+          </div>
+        ) : (
+          <ul className="mt-4 space-y-2.5">
+            <AnimatePresence initial={false}>
+              {[...active, ...cleared].map((task) => (
+                <QuestCard
+                  key={task.id}
+                  task={task}
+                  onEdit={(t) => setFormState({ open: true, task: t })}
+                  onDelete={(t) => {
+                    if (confirm(`Delete quest "${t.title}"?`)) removeTask(t.id);
+                  }}
+                />
+              ))}
+            </AnimatePresence>
+          </ul>
+        )}
+      </section>
+
+      <QuestForm state={formState} onClose={() => setFormState({ open: false, task: null })} />
+      {/* Keep profile referenced for aria status line */}
+      <p className="sr-only" aria-live="polite">
+        {profile ? `Level ${profile.level}, ${profile.totalXp} total XP.` : ""}
+      </p>
+      <span className="hidden">{push.name}</span>
     </div>
   );
 }

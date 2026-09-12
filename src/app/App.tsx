@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { supabase, backendReady } from "../lib/supabase";
 import { AuthProvider, useAuth } from "../hooks/useAuth";
+import { GameStoreProvider } from "../hooks/useGameStore";
+import { RewardProvider } from "../hooks/useReward";
 import { SystemMessageProvider } from "../components/system/SystemMessage";
 import LandingPage from "../pages/LandingPage";
 import AuthPage from "../pages/AuthPage";
@@ -97,7 +99,11 @@ export default function App() {
   return (
     <AuthProvider>
       <SystemMessageProvider>
-        <Shell />
+        <GameStoreProvider>
+          <RewardProvider>
+            <Shell />
+          </RewardProvider>
+        </GameStoreProvider>
       </SystemMessageProvider>
     </AuthProvider>
   );
