@@ -2,24 +2,37 @@
 // Layout: top-center menu / left zone rail / center character on world bg /
 // right stats + next-level / bottom XP bar / today's quests below the fold.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, ChevronDown } from "lucide-react";
 import SystemMenu from "../components/system/SystemMenu";
 import ZoneRail from "../components/system/ZoneRail";
 import StatPanel from "../components/system/StatPanel";
 import LevelBar from "../components/system/LevelBar";
+import { StreakFlame, EssenceCrystal } from "../components/ui/GameArt";
 import CharacterStage from "../components/character/CharacterStage";
 import QuestCard from "../components/quest/QuestCard";
 import QuestForm, { type QuestFormState } from "../components/quest/QuestForm";
 import WorldCanvas from "../components/world/WorldCanvas";
 import { useGameStore } from "../hooks/useGameStore";
+import { seedAwakeningQuestIfEmpty } from "../services/awakeningSeed";
 import { useSystemMessage } from "../components/system/SystemMessage";
 
 export default function HomePage() {
-  const { profile, tasks, loading, error, removeTask } = useGameStore();
+  const { tasks, loading, error, removeTask, refresh } = useGameStore();
   const { push } = useSystemMessage();
   const [formState, setFormState] = useState<QuestFormState>({ open: false, task: null });
+
+  // PRD 5.3: brand-new players always have an achievable first quest.
+  useEffect(() => {
+    if (!loading && !error && tasks.length === 0) {
+      seedAwakeningQuestIfEmpty()
+        .then((t) => {
+          if (t) push("[SYSTEM] AWAKENING QUEST REGISTERED.");
+        })
+        .then(() => refresh());
+    }
+  }, [loading, error, tasks.length, refresh, push]);
 
   const active = useMemo(() => tasks.filter((t) => !t.completed), [tasks]);
   const cleared = useMemo(() => tasks.filter((t) => t.completed), [tasks]);
@@ -66,9 +79,14 @@ export default function HomePage() {
           <ZoneRail />
         </div>
 
-        {/* Right: stats + next level */}
-        <div className="absolute right-3 top-1/2 z-30 -translate-y-1/2 sm:right-5">
+        {/* Right: stats + next level (desktop) */}
+        <div className="absolute right-3 top-1/2 z-30 hidden -translate-y-1/2 sm:right-5 md:block">
           <StatPanel />
+        </div>
+
+        {/* Mobile: compact stats row above the XP bar */}
+        <div className="absolute bottom-16 left-1/2 z-30 w-full max-w-md -translate-x-1/2 px-4 md:hidden">
+          <MobileStats />
         </div>
 
         {/* Register quest button, top-right */}
@@ -137,11 +155,35 @@ export default function HomePage() {
       </section>
 
       <QuestForm state={formState} onClose={() => setFormState({ open: false, task: null })} />
-      {/* Keep profile referenced for aria status line */}
-      <p className="sr-only" aria-live="polite">
-        {profile ? `Level ${profile.level}, ${profile.totalXp} total XP.` : ""}
-      </p>
-      <span className="hidden">{push.name}</span>
+    </div>
+  );
+}
+
+// Compact stats strip shown above the XP bar on mobile only.
+function MobileStats() {
+  const { profile } = useGameStore();
+  if (!profile) return null;
+  const stats: Array<[string, number]> = [
+    ["STR", profile.str],
+    ["INT", profile.int],
+    ["DISC", profile.disc],
+    ["VIT", profile.vit],
+    ["CRE", profile.cre],
+  ];
+  return (
+    <div className="hud-panel flex items-center justify-between gap-2 rounded-sm px-3 py-2">
+      {stats.map(([k, v]) => (
+        <div key={k} className="text-center">
+          <p className="text-[9px] font-semibold tracking-wider text-mist">{k}</p>
+          <p className="font-display text-sm tabular-nums text-ivory">{v}</p>
+        </div>
+      ))}
+      <div className="flex items-center gap-2 border-l border-violet/15 pl-2">
+        <StreakFlame size={16} lit={profile.currentStreak > 0} />
+        <span className="font-display text-sm tabular-nums text-ivory">{profile.currentStreak}</span>
+        <EssenceCrystal size={16} />
+        <span className="font-display text-sm tabular-nums text-ivory">{profile.essence}</span>
+      </div>
     </div>
   );
 }
