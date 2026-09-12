@@ -14,6 +14,7 @@ import CharacterStage from "../components/character/CharacterStage";
 import QuestCard from "../components/quest/QuestCard";
 import QuestForm, { type QuestFormState } from "../components/quest/QuestForm";
 import WorldCanvas from "../components/world/WorldCanvas";
+import AmbientLayer from "../components/world/AmbientLayer";
 import SystemBoot from "../components/system/SystemBoot";
 import { useGameStore } from "../hooks/useGameStore";
 import { seedAwakeningQuestIfEmpty } from "../services/awakeningSeed";
@@ -74,6 +75,7 @@ export default function HomePage() {
       {/* Full-viewport HUD stage */}
       <div className="relative h-[100svh] min-h-[560px] overflow-hidden">
         <WorldCanvas />
+        <AmbientLayer />
         <CharacterStage />
 
         <SystemMenu />
