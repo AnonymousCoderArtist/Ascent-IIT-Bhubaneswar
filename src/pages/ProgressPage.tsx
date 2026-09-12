@@ -40,7 +40,7 @@ export default function ProgressPage() {
               xpAwarded: r.xp_awarded,
               essenceAwarded: r.essence_awarded,
               completedAt: r.completed_at,
-              taskTitle: r.tasks?.[0]?.title ?? null,
+              taskTitle: r.tasks?.title ?? null,
             }))
           );
         }

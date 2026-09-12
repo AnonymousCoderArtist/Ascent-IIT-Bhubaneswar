@@ -64,8 +64,29 @@ export function RewardProvider({ children }: { children: ReactNode }) {
 
         refresh();
       } catch (e) {
-        console.error(e);
-        push("[SYSTEM] Connection unstable. Reward is not yet confirmed.");
+        if (e instanceof api.QuestError) {
+          console.error("QuestError:", e.code, e.message);
+          sfx.fault();
+          switch (e.code) {
+            case "TASK_ALREADY_COMPLETED":
+              push("[SYSTEM] Quest already cleared. Status resynced.");
+              refresh();
+              break;
+            case "TASK_NOT_FOUND":
+              push("[SYSTEM] Quest no longer exists. Status resynced.");
+              refresh();
+              break;
+            case "AUTH_REQUIRED":
+              push("[SYSTEM] Session expired. Re-authentication required.");
+              break;
+            default:
+              push(`[SYSTEM] ${e.message}`);
+          }
+        } else {
+          console.error(e);
+          sfx.fault();
+          push("[SYSTEM] Connection unstable. Reward is not yet confirmed.");
+        }
       } finally {
         setCompletingIds((prev) => {
           const next = new Set(prev);

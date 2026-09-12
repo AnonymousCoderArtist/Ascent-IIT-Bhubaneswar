@@ -57,17 +57,40 @@ export async function getProfile(): Promise<Profile | null> {
 }
 
 export async function updateDisplayName(name: string): Promise<void> {
-  const { error } = await supabase.from("profiles").update({ display_name: name }).eq("id", (await supabase.auth.getUser()).data.user?.id ?? "");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated.");
+  const { error } = await supabase.from("profiles").update({ display_name: name }).eq("id", user.id);
   if (error) throw error;
 }
 
 // ---- Completion (server-authoritative via Edge Function -> RPC) ----
 
+export class QuestError extends Error {
+  code: string;
+  constructor(code: string, message: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
 export async function completeQuest(taskId: string): Promise<CompleteQuestResponse> {
   const { data, error } = await supabase.functions.invoke("complete-quest", { body: { taskId } });
-  if (error) throw error;
-  if (data && typeof data === "object" && "error" in data && !("success" in data)) {
-    throw new Error((data as { message?: string }).message ?? "Completion failed.");
+  // Network / FunctionsError: surface the message if we have it.
+  if (error) {
+    const fnData = (error as { context?: { payload?: unknown } }).context?.payload as
+      | { code?: string; message?: string }
+      | undefined;
+    throw new QuestError(
+      fnData?.code ?? "REWARD_TRANSACTION_FAILED",
+      fnData?.message ?? error.message ?? "Completion failed."
+    );
+  }
+  // RPC-level error body: { code, message } without success flag.
+  if (data && typeof data === "object" && "error" in (data as object) && !("success" in (data as object))) {
+    const body = data as { code?: string; message?: string; error?: string };
+    throw new QuestError(body.code ?? body.error ?? "REWARD_TRANSACTION_FAILED", body.message ?? "Completion failed.");
   }
   return data as CompleteQuestResponse;
 }

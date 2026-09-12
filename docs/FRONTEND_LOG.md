@@ -98,3 +98,26 @@ Only `character-l1.png` + `world-l1.webp` generated so far. `src/lib/milestones.
 - Dev-server smoke test — all pages serve, no transform errors.
 - XP math cross-checked against backend SQL formula.
 - Accessibility: aria-live system log, labeled forms, radiogroups, progressbar roles, focus-visible, reduced-motion paths, sr-only labels on icon buttons.
+
+### Checkpoint 9: backend connection audit — typed errors + integration fixes
+
+**Integration audit of the full request path** (client -> Edge Function -> RPC `complete_quest` -> response mapping back to camelCase contract):
+
+- **Typed quest errors** (`src/services/api.ts`): new `QuestError extends Error { code }`. `completeQuest` now extracts the structured error payload (`{code, message}`) from `FunctionsError.context.payload` (edge function passes the RPC P0001-P0003 body through) or from a raw RPC error body, instead of throwing a generic Error. Previously every failure surfaced as "Connection unstable" regardless of cause.
+- **Code-specific handling** (`src/hooks/useReward.tsx`): catch block now branches on `QuestError.code`:
+  - `TASK_ALREADY_COMPLETED` -> "[SYSTEM] Quest already cleared. Status resynced." + store refresh
+  - `TASK_NOT_FOUND` -> "[SYSTEM] Quest no longer exists. Status resynced." + store refresh
+  - `AUTH_REQUIRED` -> "[SYSTEM] Session expired. Re-authentication required."
+  - other codes -> surfaced message; network failures keep the "Connection unstable" path + `sfx.fault()`
+- **`updateDisplayName` fixed**: previously chained `await` inside `.eq()` (the id could resolve to empty string and silently update nothing); now fetches the user first, throws "Not authenticated." if absent, then updates.
+- **ProgressPage history embed fixed**: PostgREST many-to-one embed `tasks(title)` returns an **object**, not an array — `r.tasks?.[0]?.title` was always null, so every history row showed "Quest". Now `r.tasks?.title`.
+
+**Audit findings flagged for backend agent** (not client-fixable):
+
+- `inventory` table RLS has only a SELECT policy — there is no UPDATE policy, so equip/unequip cannot be written from the client, and no store-purchase endpoint exists in migrations. InventoryPage store tiles are display-only for the MVP.
+- `recommend-quest` edge function: frontend has not yet wired the AI recommendation call — deterministic fallback works server-side without a Gemini key; real AI needs `GEMINI_API_KEY` from the user.
+
+### Verification (Checkpoint 9)
+
+- `npm run build` — 0 TS errors (main 675KB / lazy three 747KB chunks).
+- Dev-server smoke test — /, /auth, /home, /inventory, /progress, /awakening all 200.
