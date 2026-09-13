@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, ChevronDown } from "lucide-react";
-import { uiOpen, uiTick } from "../lib/sfx";
+import { uiOpen, uiTick, questCleared } from "../lib/sfx";
 import SystemMenu from "../components/system/SystemMenu";
 import ZoneRail from "../components/system/ZoneRail";
 import StatPanel from "../components/system/StatPanel";
@@ -242,7 +242,7 @@ export default function HomePage() {
                     </div>
                     <div className="flex shrink-0 gap-1">
                       {!task.completed && (
-                        <button onClick={() => { uiTick(); }} aria-label="Complete quest" className="rounded-sm border border-violet/50 bg-violet px-1.5 py-0.5 text-[8px] font-display font-bold tracking-widest text-ivory">✓</button>
+                        <button onClick={() => { uiTick(); questCleared(); }} aria-label="Complete quest" className="rounded-sm border border-violet/50 bg-violet px-1.5 py-0.5 text-[8px] font-display font-bold tracking-widest text-ivory">✓</button>
                       )}
                       <button onClick={() => { if (confirm(`Delete "${task.title}"?`)) { uiTick(); removeTask(task.id); } }} aria-label="Delete quest" className="rounded-sm border border-danger/30 px-1.5 py-0.5 text-[8px] font-display font-bold tracking-widest text-danger/70">✕</button>
                     </div>
