@@ -4,7 +4,7 @@
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
-let muted = localStorage.getItem("ascent:sfx-muted") === "0" ? false : true;
+let muted = localStorage.getItem("ascent:sfx-muted") === "1";
 
 function ensureCtx(): boolean {
   if (muted) return false;

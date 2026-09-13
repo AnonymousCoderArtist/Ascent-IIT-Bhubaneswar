@@ -52,3 +52,5 @@ docs/         — build logs
 ```
 
 Agents: frontend branch `frontend`, backend branch `backend`. Shared contract: `ASCENT_MVP/agents/SHARED_CONTRACT.md`.
+
+See [docs/CREDITS.md](docs/CREDITS.md) for full credits on tools, AI, and team.
