@@ -18,6 +18,7 @@ import AmbientLayer from "../components/world/AmbientLayer";
 import SystemBoot from "../components/system/SystemBoot";
 import { StreakWeek, NextQuestNudge } from "../components/system/HabitHooks";
 import AiSettingsPanel from "../components/system/AiSettingsPanel";
+import { Dumbbell, BookOpen, CalendarCheck, HeartPulse, Sparkles } from "lucide-react";
 import RankRoadmap from "../components/system/RankRoadmap";
 import { useGameStore } from "../hooks/useGameStore";
 import { seedAwakeningQuestIfEmpty } from "../services/awakeningSeed";
@@ -161,39 +162,39 @@ export default function HomePage() {
           <LevelBar />
         </div>
 
-        {/* TODAY'S QUESTS — full-height left panel */}
-        <div className="absolute left-20 top-32 bottom-20 z-30 w-72 sm:left-24 sm:w-80 hidden sm:block">
-          <div className="hud-panel rounded-sm p-4 h-full flex flex-col">
-            <p className="font-display text-[10px] tracking-[0.3em] text-violet shrink-0">TODAY'S QUESTS</p>
-            <div className="mt-3 flex-1 overflow-y-auto space-y-2 pr-1">
+        {/* TODAY'S QUESTS — auto-height panel */}
+        <div className="absolute left-20 top-36 z-30 w-72 sm:left-24 sm:w-80 hidden sm:block">
+          <div className="hud-panel rounded-sm p-3">
+            <p className="font-display text-[10px] tracking-[0.3em] text-violet">TODAY'S QUESTS</p>
+            <div className="mt-2 space-y-1.5">
               {active.length === 0 && cleared.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <p className="text-xs text-mist">No quests yet</p>
-                  <p className="mt-1 text-[10px] text-mist/50">Register one to start</p>
-                </div>
+                <p className="text-[10px] text-mist">No quests yet</p>
               ) : (
-                [...active, ...cleared].map((task) => (
-                  <div key={task.id} className={`flex items-center gap-2 rounded-sm border border-violet/10 p-2.5 ${task.completed ? "opacity-50" : ""}`}>
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-ink text-violet">
-                      {task.category}
+                [...active, ...cleared].map((task) => {
+                  const CatIcon = task.category === "STR" ? Dumbbell : task.category === "INT" ? BookOpen : task.category === "DISC" ? CalendarCheck : task.category === "VIT" ? HeartPulse : Sparkles;
+                  return (
+                    <div key={task.id} className={`flex items-center gap-2 rounded-sm border border-violet/10 bg-ink/50 p-2 ${task.completed ? "opacity-50" : ""}`}>
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-void/50 text-violet">
+                        <CatIcon size={13} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className={`truncate text-xs font-semibold ${task.completed ? "text-mist line-through" : "text-ivory"}`}>
+                          {task.title}
+                        </p>
+                        <p className="text-[9px] text-mist">{task.difficulty} · {task.estimatedMinutes}m</p>
+                      </div>
+                      {!task.completed && (
+                        <button
+                          onClick={() => {}}
+                          aria-label="Complete quest"
+                          className="shrink-0 rounded-sm border border-violet/50 bg-violet px-2 py-0.5 text-[9px] font-display font-bold tracking-widest text-ivory"
+                        >
+                          CLEAR
+                        </button>
+                      )}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className={`truncate text-xs font-semibold ${task.completed ? "text-mist line-through" : "text-ivory"}`}>
-                        {task.title}
-                      </p>
-                      <p className="text-[9px] text-mist">{task.difficulty} · {task.estimatedMinutes}m · +{task.category}</p>
-                    </div>
-                    {!task.completed && (
-                      <button
-                        onClick={() => {}}
-                        aria-label="Complete quest"
-                        className="shrink-0 rounded-sm border border-violet/50 bg-violet px-2 py-1 text-[9px] font-display font-bold tracking-widest text-ivory"
-                      >
-                        CLEAR
-                      </button>
-                    )}
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
