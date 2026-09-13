@@ -136,3 +136,16 @@ Only `character-l1.png` + `world-l1.webp` generated so far. `src/lib/milestones.
 
 - `npm run build` 0 errors; all routes 200 on dev-server smoke test.
 - Gemini integration tested live with the real key (JSON mode, 3 calls total).
+
+### Checkpoint 11: bring-your-own-key AI settings
+
+- **Users supply their own AI key** — no key is bundled in the repo or .env anymore. `VITE_GEMINI_API_KEY` removed from `.env.example`; the `.env` with the dev test key deleted from disk.
+- **AI settings panel** (`src/components/system/AiSettingsPanel.tsx`): opened via the Sparkles button in SystemMenu (glowing dot when configured) or the "+ ADD AI KEY" chip on Home. Provider toggle: **Google Gemini** (default, model preset) or **OpenAI-compatible** (custom base URL, e.g. any self-hosted/alternative endpoint, + key + model name). Show/hide key, TEST button (round-trip check), SAVE, clear-settings. Settings persist in localStorage only.
+- **AI client** (`src/lib/aiClient.ts`): one call path for both providers. Gemini native API with `thinkingConfig.thinkingBudget: 0` on flash models — thinking tokens were silently truncating the JSON output mid-string at 1024 max tokens (verified live: 503-retry then truncated parse, then clean 3-quest JSON with the fix). OpenAI path posts to `{baseUrl}/chat/completions` with Bearer auth.
+- **Robust parsing** (`parseJsonLoose`): handles JSON wrapped in code fences or prose, plus strict validation (category/difficulty/minutes clamped, titles capped) and deterministic fallback on any failure.
+- Unconfigured users still get the necessary dailies + deterministic weakest-stat quests; AI is purely additive.
+
+### Verification (Checkpoint 11)
+
+- `npm run build` 0 errors; all routes 200.
+- Live end-to-end test of the exact production request (Gemini flash, thinkingBudget 0, 2048 tokens, JSON mode) returned 3 valid quests. Total dev key usage: 6 calls; key removed from the repo.
