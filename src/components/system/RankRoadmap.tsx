@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Star } from "lucide-react";
 import { useState } from "react";
-import { useGameStore } from "../hooks/useGameStore";
-import { characterAssetForLevel, worldAssetForLevel, WORLD_MILESTONE_LABELS } from "../lib/milestones";
-import { levelDisplay, rankForLevel, thresholdForLevel } from "../lib/progression";
+import { useGameStore } from "../../hooks/useGameStore";
+import { characterAssetForLevel, worldAssetForLevel, WORLD_MILESTONE_LABELS } from "../../lib/milestones";
+import { levelDisplay, rankForLevel, thresholdForLevel } from "../../lib/progression";
 import { RankBadge } from "../ui/GameArt";
 
 export default function RankRoadmap() {
