@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, ChevronDown } from "lucide-react";
-import { uiOpen, uiTick } from "../lib/sfx";
+import { uiOpen } from "../lib/sfx";
 import SystemMenu from "../components/system/SystemMenu";
 import ZoneRail from "../components/system/ZoneRail";
 import StatPanel from "../components/system/StatPanel";
