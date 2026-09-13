@@ -211,48 +211,54 @@ export default function HomePage() {
         </motion.div>
       </div>
 
-      {/* Mobile quest list — minimal, fits screen */}
-      <section aria-label="Today's quests" className="relative mx-auto w-full max-w-full overflow-hidden px-3 pb-16 pt-10 sm:hidden">
+      {/* Mobile quest section — all content, fits screen */}
+      <section aria-label="Today's quests" className="relative mx-auto w-full max-w-full overflow-hidden px-2 pb-16 pt-10 sm:hidden">
         <div className="w-full">
           <div className="flex items-center justify-between">
             <p className="font-display text-xs tracking-[0.3em] text-violet">TODAY'S QUESTS</p>
             <div className="flex items-center gap-1">
               {aiReady ? (
-                <span className="rounded-full border border-arc/40 bg-arc/10 px-1.5 py-0.5 text-[8px] font-bold tracking-widest text-arc">AI</span>
+                <span className="rounded-full border border-arc/40 bg-arc/10 px-1.5 py-0.5 text-[8px] font-bold tracking-widest text-arc">AI DAILY</span>
               ) : (
-                <button onClick={() => { uiTick(); setAiOpen(true); }} className="font-display rounded-full border border-arc/40 bg-arc/10 px-1.5 py-0.5 text-[8px] font-bold tracking-widest text-arc transition-colors hover:bg-arc/25">+ AI</button>
+                <button onClick={() => { uiTick(); setAiOpen(true); }} className="font-display rounded-full border border-arc/40 bg-arc/10 px-1.5 py-0.5 text-[8px] font-bold tracking-widest text-arc transition-colors hover:bg-arc/25">+ AI KEY</button>
               )}
-              <span className="text-[10px] tabular-nums text-mist">{active.length}</span>
+              <span className="text-[10px] tabular-nums text-mist">{active.length} active</span>
             </div>
           </div>
           {active.length === 0 && cleared.length === 0 ? (
-            <div className="mt-2 rounded-sm border border-violet/10 bg-ink/50 p-4 text-center">
-              <p className="text-xs text-mist">No quests yet</p>
-              <button onClick={() => { uiOpen(); setFormState({ open: true, task: null }); }} className="mt-2 font-display rounded-sm border border-violet/50 bg-violet px-4 py-2 text-[10px] uppercase tracking-widest text-ivory">REGISTER</button>
+            <div className="mt-2 rounded-sm border border-violet/10 bg-ink/50 p-3 text-center">
+              <p className="text-[11px] text-mist">No quests registered. The System awaits your first command.</p>
+              <button onClick={() => { uiOpen(); setFormState({ open: true, task: null }); }} className="mt-2 font-display rounded-sm border border-violet/50 bg-violet px-4 py-2 text-[10px] uppercase tracking-widest text-ivory">REGISTER FIRST QUEST</button>
             </div>
           ) : (
             <>
               <ul className="mt-2 space-y-1.5">
                 {[...active, ...cleared].map((task) => (
-                  <div key={task.id} className={`flex items-center gap-2 rounded-sm border border-violet/10 bg-ink/50 px-2 py-1.5 ${task.completed ? "opacity-50" : ""}`}>
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-void text-violet text-[8px] font-bold">{task.category.slice(0, 1)}</div>
+                  <div key={task.id} className={`flex items-center gap-2 rounded-sm border border-violet/10 bg-ink/50 px-2 py-2 ${task.completed ? "opacity-50" : ""}`}>
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-violet/20 bg-void text-violet text-[9px] font-bold">{task.category.slice(0, 1)}</div>
                     <div className="min-w-0 flex-1">
-                      <p className={`truncate text-[10px] font-semibold ${task.completed ? "text-mist" : "text-ivory"}`}>{task.title}</p>
-                      <p className="text-[8px] text-mist">{task.difficulty} · {task.estimatedMinutes}m</p>
+                      <p className={`truncate text-[11px] font-semibold ${task.completed ? "text-mist" : "text-ivory"}`}>{task.title}</p>
+                      <p className="text-[9px] text-mist">{task.difficulty} · {task.estimatedMinutes}m · +{task.category}</p>
                     </div>
                     <div className="flex shrink-0 gap-1">
                       {!task.completed && (
-                        <button onClick={() => { uiTick(); questCleared(); }} aria-label="Complete quest" className="rounded-sm border border-violet/50 bg-violet px-1.5 py-0.5 text-[8px] font-display font-bold tracking-widest text-ivory">✓</button>
+                        <button onClick={() => { uiTick(); questCleared(); }} aria-label="Complete quest" className="rounded-sm border border-violet/50 bg-violet px-2 py-1 text-[8px] font-display font-bold tracking-widest text-ivory">CLEAR</button>
                       )}
-                      <button onClick={() => { if (confirm(`Delete "${task.title}"?`)) { uiTick(); removeTask(task.id); } }} aria-label="Delete quest" className="rounded-sm border border-danger/30 px-1.5 py-0.5 text-[8px] font-display font-bold tracking-widest text-danger/70">✕</button>
+                      <button onClick={() => { if (confirm(`Delete "${task.title}"?`)) { uiTick(); removeTask(task.id); } }} aria-label="Delete quest" className="rounded-sm border border-danger/30 px-1.5 py-1 text-[8px] font-display font-bold tracking-widest text-danger/70">DEL</button>
                     </div>
                   </div>
                 ))}
               </ul>
-              <button onClick={() => { uiOpen(); setFormState({ open: true, task: null }); }} className="mt-2 w-full rounded-sm border border-violet/30 bg-ink/50 px-3 py-1.5 text-[9px] font-display font-bold tracking-widest text-mist hover:text-ivory">+ REGISTER MORE</button>
-              <button onClick={() => { generateMore(); }} disabled={generating} className="mt-1 w-full rounded-sm border border-arc/50 bg-arc/10 px-3 py-1.5 text-[9px] font-display font-bold tracking-widest text-arc transition-colors hover:bg-arc/20 disabled:opacity-50">{generating ? "..." : aiReady ? "GENERATE [AI]" : "GENERATE"}</button>
+              <button onClick={() => { uiOpen(); setFormState({ open: true, task: null }); }} className="mt-2 w-full rounded-sm border border-violet/30 bg-ink/50 px-3 py-2 text-[9px] font-display font-bold tracking-widest text-mist hover:text-ivory">+ REGISTER MORE</button>
+              <button onClick={() => { uiTick(); generateMore(); }} disabled={generating} className="mt-1 w-full rounded-sm border border-arc/50 bg-arc/10 px-3 py-2 text-[9px] font-display font-bold tracking-widest text-arc transition-colors hover:bg-arc/20 disabled:opacity-50">{generating ? "GENERATING..." : aiReady ? "GENERATE NEW QUESTS [AI]" : "GENERATE NEW QUESTS"}</button>
             </>
           )}
+          <div className="mt-3">
+            <StreakWeek />
+          </div>
+          <div className="mt-2">
+            <NextQuestNudge onRegister={() => { uiTick(); setFormState({ open: true, task: null }); }} />
+          </div>
         </div>
       </section>
 
