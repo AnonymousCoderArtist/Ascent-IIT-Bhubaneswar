@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { localSignUp, localSignIn, localGetSession } from "../services/localBackend";
 import Button from "../components/ui/Button";
 
 export default function AuthPage() {
@@ -12,10 +12,8 @@ export default function AuthPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Prefill "@" hint from session if redirected here while logged in.
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate("/home", { replace: true });
-    });
+    const session = localGetSession();
+    if (session) navigate("/home", { replace: true });
   }, [navigate]);
 
   async function onSubmit(e: React.FormEvent) {
@@ -23,11 +21,11 @@ export default function AuthPage() {
     setError(null);
     setBusy(true);
     try {
-      const { error } =
-        mode === "signup"
-          ? await supabase.auth.signUp({ email, password })
-          : await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      if (mode === "signup") {
+        await localSignUp(email, password);
+      } else {
+        await localSignIn(email, password);
+      }
       navigate("/awakening", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Authentication failed.");

@@ -1,9 +1,10 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import { localGetSession, localSignIn, localSignOut as localLogout, type Session } from "./localBackend";
+import type { Session as SupaSession } from "@supabase/supabase-js";
 
 interface AuthContextValue {
-  session: Session | null;
+  session: SupaSession | null;
   loading: boolean;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -16,33 +17,52 @@ const AuthContext = createContext<AuthContextValue>({
   refreshSession: async () => {},
 });
 
+function toSupaSession(local: { user: { id: string; email: string } } | null): SupaSession | null {
+  if (!local) return null;
+  return {
+    access_token: local.user.id,
+    refresh_token: local.user.id,
+    token_type: "bearer",
+    expires_at: 0,
+    expires_in: 0,
+    user: {
+      id: local.user.id,
+      email: local.user.email,
+      email_confirmed_at: new Date().toISOString(),
+      role: "authenticated",
+      app_metadata: {},
+      user_metadata: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      aud: "authenticated",
+      confirmation_sent_at: null,
+      recovered_at: null,
+      last_sign_in_at: new Date().toISOString(),
+      role: "authenticated",
+    } as any,
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<SupaSession | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-    });
-
-    return () => subscription.unsubscribe();
+    const local = localGetSession();
+    if (local) {
+      setSession(toSupaSession(local));
+    }
+    setLoading(false);
   }, []);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    await localLogout();
     setSession(null);
   }, []);
 
   const refreshSession = useCallback(async () => {
-    const { data } = await supabase.auth.getSession();
-    setSession(data.session);
+    const local = localGetSession();
+    setSession(toSupaSession(local));
   }, []);
 
   return (

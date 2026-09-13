@@ -1,12 +1,26 @@
 // API service layer — one place for every backend call.
+// Branches between Supabase (VITE_SUPABASE_URL set) and local mode (cached on user PC).
 // Shapes match agents/SHARED_CONTRACT.md + supabase/migrations RPCs.
 
 import { supabase } from "../lib/supabase";
-import type { Profile, Task, CompleteQuestResponse, InventoryItem } from "../types/contract";
+import { env } from "../lib/env";
+import {
+  localSignUp, localSignIn, localSignOut, localGetSession, localEnsureSession,
+  localGetProfile, localUpdateDisplayName,
+  localListTasks, localCreateTask, localUpdateTask, localDeleteTask,
+  localCompleteQuest, localListInventory, localListCatalog, localListQuestExamples, localRecommendQuest,
+  ensureLocalSeeds,
+} from "./localBackend";
+import type { Profile, Task, CompleteQuestResponse, InventoryItem, CatalogItem, QuestExample } from "../types/contract";
+
+ensureLocalSeeds();
+
+const useLocal = (): boolean => !(env.VITE_SUPABASE_URL && env.VITE_SUPABASE_ANON_KEY);
 
 // ---- Tasks ----
 
 export async function listTasks(): Promise<Task[]> {
+  if (useLocal()) return localListTasks();
   const { data, error } = await supabase
     .from("tasks")
     .select("*")
@@ -17,12 +31,14 @@ export async function listTasks(): Promise<Task[]> {
 }
 
 export async function createTask(input: Partial<TaskInput>): Promise<Task> {
+  if (useLocal()) return localCreateTask(input);
   const { data, error } = await supabase.from("tasks").insert(mapTaskInput(input)).select().single();
   if (error) throw error;
   return mapTask(data);
 }
 
 export async function updateTask(id: string, input: Partial<TaskInput>): Promise<Task> {
+  if (useLocal()) return localUpdateTask(id, input);
   const { data, error } = await supabase
     .from("tasks")
     .update(mapTaskInput(input))
@@ -34,6 +50,7 @@ export async function updateTask(id: string, input: Partial<TaskInput>): Promise
 }
 
 export async function deleteTask(id: string): Promise<void> {
+  if (useLocal()) { await localDeleteTask(id); return; }
   const { error } = await supabase.from("tasks").delete().eq("id", id);
   if (error) throw error;
 }
@@ -51,12 +68,14 @@ export interface TaskInput {
 // ---- Profile ----
 
 export async function getProfile(): Promise<Profile | null> {
+  if (useLocal()) return localGetProfile();
   const { data, error } = await supabase.from("profiles").select("*").single();
   if (error && error.code !== "PGRST116") throw error;
   return data ? mapProfile(data) : null;
 }
 
 export async function updateDisplayName(name: string): Promise<void> {
+  if (useLocal()) { await localUpdateDisplayName(name); return; }
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -76,6 +95,7 @@ export class QuestError extends Error {
 }
 
 export async function completeQuest(taskId: string): Promise<CompleteQuestResponse> {
+  if (useLocal()) return localCompleteQuest(taskId);
   const { data, error } = await supabase.functions.invoke("complete-quest", { body: { taskId } });
   // Network / FunctionsError: surface the message if we have it.
   if (error) {
@@ -98,6 +118,7 @@ export async function completeQuest(taskId: string): Promise<CompleteQuestRespon
 // ---- Inventory & store ----
 
 export async function listInventory(): Promise<InventoryItem[]> {
+  if (useLocal()) return localListInventory();
   const { data, error } = await supabase.from("inventory").select("*");
   if (error) throw error;
   return (data ?? []).map(mapInventoryItem);
@@ -113,6 +134,7 @@ export interface CatalogItem {
 }
 
 export async function listCatalog(): Promise<CatalogItem[]> {
+  if (useLocal()) return localListCatalog();
   const { data, error } = await supabase.from("item_catalog").select("*");
   if (error) throw error;
   return (data ?? []).map((r: any) => ({
@@ -135,6 +157,7 @@ export interface QuestExample {
 }
 
 export async function listQuestExamples(): Promise<QuestExample[]> {
+  if (useLocal()) return localListQuestExamples();
   const { data, error } = await supabase.from("quest_examples").select("*");
   if (error) throw error;
   return (data ?? []).map((r: any) => ({

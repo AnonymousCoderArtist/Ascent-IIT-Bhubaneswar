@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Flame, Trophy } from "lucide-react";
-import { supabase } from "../lib/supabase";
+import { localGetSession } from "../services/localBackend";
 import SystemMenu from "../components/system/SystemMenu";
 import LevelBar from "../components/system/LevelBar";
 import { StreakWeek } from "../components/system/HabitHooks";
@@ -25,27 +25,24 @@ export default function ProgressPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from("task_completions")
-      .select("id, xp_awarded, essence_awarded, completed_at, tasks(title)")
-      .order("completed_at", { ascending: false })
-      .limit(10)
-      .then(({ data, error }) => {
-        if (error) {
-          console.error(error);
-        } else {
-          setHistory(
-            (data ?? []).map((r: any) => ({
-              id: r.id,
-              xpAwarded: r.xp_awarded,
-              essenceAwarded: r.essence_awarded,
-              completedAt: r.completed_at,
-              taskTitle: r.tasks?.title ?? null,
-            }))
-          );
-        }
-        setLoading(false);
-      });
+    const session = localGetSession();
+    if (!session) { setLoading(false); return; }
+    const completions = JSON.parse(localStorage.getItem("ascent:completions") ?? "[]");
+    const tasks = JSON.parse(localStorage.getItem("ascent:tasks") ?? "{}");
+    setHistory(
+      completions
+        .filter((c: any) => c.userId === session.user.id)
+        .sort((a: any, b: any) => (b.completedAt < a.completedAt ? 1 : -1))
+        .slice(0, 10)
+        .map((r: any) => ({
+          id: r.taskId,
+          xpAwarded: r.xpAwarded,
+          essenceAwarded: r.essenceAwarded,
+          completedAt: r.completedAt,
+          taskTitle: tasks[r.taskId]?.title ?? null,
+        }))
+    );
+    setLoading(false);
   }, []);
 
   if (!profile) return null;

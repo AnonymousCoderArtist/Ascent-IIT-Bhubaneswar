@@ -1,9 +1,10 @@
 // Daily quest seeding — the System issues today's quests on first load of the day:
 // 4 necessary baseline quests + 3 AI-generated quests (or deterministic fallback).
 // Runs once per calendar day per player; manual "GENERATE" triggers a fresh AI call.
+// Uses localStorage for daily dedup and task storage.
 
-import { supabase } from "../lib/supabase";
-import type { TaskInput } from "./api";
+import { localGetSession } from "./localBackend";
+import type { Task } from "../types/contract";
 import { necessaryQuests, generateDailyQuests, getSavedGoals } from "../lib/questGenerator";
 
 const DAILY_SEED_KEY = "ascent:daily-seeded-on";
@@ -28,45 +29,49 @@ function markDailySeeded(): void {
   }
 }
 
-/** Insert quests for today. Skips titles that already exist (idempotent). */
-async function insertDaily(inputs: TaskInput[]): Promise<number> {  if (inputs.length === 0) return 0;
-  const { data: existing } = await supabase.from("tasks").select("title");
-  const existingTitles = new Set((existing ?? []).map((r: any) => r.title));
-  const fresh = inputs.filter((t) => !existingTitles.has(t.title));
-  if (fresh.length === 0) return 0;
-  const { data, error } = await supabase
-    .from("tasks")
-    .insert(
-      fresh.map((t) => ({
-        title: t.title,
-        description: t.description ?? null,
-        stat: t.category,
-        difficulty: t.difficulty,
-        estimated_minutes: t.estimatedMinutes,
-        due_date: t.dueDate ?? null,
-        recurrence: t.recurrence,
-      }))
-    )
-    .select();
-  if (error) {
-    console.error("daily quest insert failed:", error);
-    return 0;
-  }
-  return data?.length ?? 0;
+function readTasks(): Record<string, Task> {
+  return JSON.parse(localStorage.getItem("ascent:tasks") ?? "{}");
 }
 
-/**
- * Seed today's quests if this is the first load of the day.
- * Returns number inserted (0 = already seeded today / offline).
- */
+function writeTasks(tasks: Record<string, Task>): void {
+  localStorage.setItem("ascent:tasks", JSON.stringify(tasks));
+}
+
+/** Insert quests for today. Skips titles that already exist (idempotent). */
+async function insertDaily(inputs: Array<{ title: string; description?: string; category: Task["category"]; difficulty: Task["difficulty"]; estimatedMinutes: number; dueDate?: string | null; recurrence: Task["recurrence"] }>): Promise<number> {
+  if (inputs.length === 0) return 0;
+  const tasks = readTasks();
+  const existingTitles = new Set(Object.values(tasks).map((t) => t.title));
+  const session = localGetSession();
+  if (!session) return 0;
+  const fresh = inputs.filter((t) => !existingTitles.has(t.title));
+  if (fresh.length === 0) return 0;
+
+  for (const t of fresh) {
+    const task: Task = {
+      id: `task_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      userId: session.user.id,
+      title: t.title,
+      description: t.description ?? undefined,
+      category: t.category,
+      difficulty: t.difficulty,
+      estimatedMinutes: t.estimatedMinutes,
+      dueDate: t.dueDate ?? null,
+      recurrence: t.recurrence,
+      completed: false,
+      createdAt: new Date().toISOString(),
+    };
+    tasks[task.id] = task;
+  }
+  writeTasks(tasks);
+  return fresh.length;
+}
+
+/** Seed today's quests if this is the first load of the day. */
 export async function seedDailyQuestsIfNewDay(
   level: number,
   stats: { STR: number; INT: number; DISC: number; VIT: number; CRE: number }
 ): Promise<number> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return 0;
   if (dailySeededToday()) return 0;
 
   const inserted = await insertDaily(necessaryQuests());

@@ -43,8 +43,8 @@ function Shell() {
     <div className="min-h-screen bg-void text-ivory">
       <ScrollToTop />
       {!backendReady && (
-        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded border border-amber/30 bg-ink px-4 py-2 text-xs text-amber">
-          [SYSTEM] Backend not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.
+        <div className="fixed top-3 left-1/2 z-50 -translate-x-1/2 rounded border border-essence/30 bg-ink px-4 py-2 text-xs text-essence">
+          [SYSTEM] LOCAL MODE — Running on this device.
         </div>
       )}
       <Routes>
