@@ -19,27 +19,73 @@ import SystemBoot from "../components/system/SystemBoot";
 import { StreakWeek, NextQuestNudge } from "../components/system/HabitHooks";
 import { useGameStore } from "../hooks/useGameStore";
 import { seedAwakeningQuestIfEmpty } from "../services/awakeningSeed";
+import { seedDailyQuestsIfNewDay, regenerateDailyQuests } from "../services/dailyQuests";
 import { useSystemMessage } from "../components/system/SystemMessage";
+import { isAiConfigured } from "../lib/env";
 
 export default function HomePage() {
-  const { tasks, loading, error, removeTask, refresh } = useGameStore();
+  const { tasks, loading, error, removeTask, refresh, profile } = useGameStore();
   const { push } = useSystemMessage();
   const [formState, setFormState] = useState<QuestFormState>({ open: false, task: null });
   const [booting, setBooting] = useState(true);
+  const [generating, setGenerating] = useState(false);
 
-  // PRD 5.3: brand-new players always have an achievable first quest.
+  // Daily quest engine: first load of the day seeds necessary + AI quests.
+  // Brand-new players (no tasks at all) get the AWAKENING QUEST first (PRD 5.3).
   useEffect(() => {
-    if (!loading && !error && tasks.length === 0) {
+    if (loading || error) return;
+    if (tasks.length === 0) {
       seedAwakeningQuestIfEmpty()
         .then((t) => {
           if (t) push("[SYSTEM] AWAKENING QUEST REGISTERED.");
         })
         .then(() => refresh());
+      return;
     }
-  }, [loading, error, tasks.length, refresh, push]);
+    if (!profile) return;
+    seedDailyQuestsIfNewDay(profile.level, {
+      STR: profile.str,
+      INT: profile.int,
+      DISC: profile.disc,
+      VIT: profile.vit,
+      CRE: profile.cre,
+    })
+      .then((n) => {
+        if (n > 0) {
+          push(`[SYSTEM] ${n} DAILY QUEST${n > 1 ? "S" : ""} REGISTERED.`);
+          refresh();
+        }
+      })
+      .catch(console.error);
+  }, [loading, error, tasks.length, profile, refresh, push]);
 
   const active = useMemo(() => tasks.filter((t) => !t.completed), [tasks]);
   const cleared = useMemo(() => tasks.filter((t) => t.completed), [tasks]);
+
+  async function generateMore() {
+    if (!profile || generating) return;
+    setGenerating(true);
+    try {
+      const n = await regenerateDailyQuests(profile.level, {
+        STR: profile.str,
+        INT: profile.int,
+        DISC: profile.disc,
+        VIT: profile.vit,
+        CRE: profile.cre,
+      });
+      push(
+        n > 0
+          ? `[SYSTEM] ${n} NEW QUEST${n > 1 ? "S" : ""} GENERATED${isAiConfigured() ? " [AI]" : ""}.`
+          : "[SYSTEM] No new quests generated — clear a few first."
+      );
+      if (n > 0) refresh();
+    } catch (e) {
+      console.error(e);
+      push("[SYSTEM] Generation failed. Try again.");
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -128,9 +174,16 @@ export default function HomePage() {
           <div>
             <div className="flex items-center justify-between">
               <h2 className="font-display text-sm tracking-[0.35em] text-violet">TODAY&apos;S QUESTS</h2>
-              <span className="text-xs tabular-nums text-mist">
-                {active.length} active · {cleared.length} cleared
-              </span>
+              <div className="flex items-center gap-2">
+                {isAiConfigured() && (
+                  <span className="rounded-full border border-arc/40 bg-arc/10 px-2 py-0.5 text-[9px] font-bold tracking-widest text-arc">
+                    AI DAILY
+                  </span>
+                )}
+                <span className="text-xs tabular-nums text-mist">
+                  {active.length} active · {cleared.length} cleared
+                </span>
+              </div>
             </div>
             {active.length === 0 && cleared.length === 0 ? (
               <div className="hud-frame hud-panel mt-4 rounded-sm p-8 text-center">
@@ -145,20 +198,33 @@ export default function HomePage() {
                 </button>
               </div>
             ) : (
-              <ul className="mt-4 space-y-2.5">
-                <AnimatePresence initial={false}>
-                  {[...active, ...cleared].map((task) => (
-                    <QuestCard
-                      key={task.id}
-                      task={task}
-                      onEdit={(t) => setFormState({ open: true, task: t })}
-                      onDelete={(t) => {
-                        if (confirm(`Delete quest "${t.title}"?`)) removeTask(t.id);
-                      }}
-                    />
-                  ))}
-                </AnimatePresence>
-              </ul>
+              <>
+                <ul className="mt-4 space-y-2.5">
+                  <AnimatePresence initial={false}>
+                    {[...active, ...cleared].map((task) => (
+                      <QuestCard
+                        key={task.id}
+                        task={task}
+                        onEdit={(t) => setFormState({ open: true, task: t })}
+                        onDelete={(t) => {
+                          if (confirm(`Delete quest "${t.title}"?`)) removeTask(t.id);
+                        }}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </ul>
+                <button
+                  onClick={generateMore}
+                  disabled={generating}
+                  className="font-display mt-4 w-full rounded-sm border border-arc/50 bg-arc/15 px-4 py-3 text-xs uppercase tracking-widest text-arc transition-colors hover:bg-arc/30 disabled:opacity-50"
+                >
+                  {generating
+                    ? "GENERATING..."
+                    : isAiConfigured()
+                      ? "GENERATE NEW QUESTS [AI]"
+                      : "GENERATE NEW QUESTS"}
+                </button>
+              </>
             )}
           </div>
           {/* Retention sidebar */}

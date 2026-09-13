@@ -57,32 +57,34 @@ export function StreakWeek() {
   );
 }
 
-// Nudge card: pulls the player back in with one concrete next action.
+// Nudge card: shows the player's current weakest attribute — pure data, no canned copy.
 export function NextQuestNudge({ onRegister }: { onRegister: () => void }) {
   const { profile, tasks } = useGameStore();
   const active = tasks.filter((t) => !t.completed);
 
-  // Simple heuristic nudge copy, deterministic:
   const hookRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (!hookRef.current) return;
-    hookRef.current.textContent = "[NEXT MOVE]";
+    hookRef.current.textContent = "[FOCUS]";
   }, []);
 
   if (!profile) return null;
-
-  let title: string;
-  let sub: string;
-  if (profile.currentStreak === 0) {
-    title = "Begin the first streak.";
-    sub = "One clear today. The counter starts.";
-  } else if (active.length === 0) {
-    title = `Protect the ${profile.currentStreak}-day chain.`;
-    sub = "Register one small quest. Keep it alive.";
-  } else {
-    title = `${active.length} quest${active.length > 1 ? "s" : ""} standing between you and today's clear.`;
-    sub = "The smallest one first. Momentum compounds.";
-  }
+  const statEntries: [string, number][] = [
+    ["STR", profile.str],
+    ["INT", profile.int],
+    ["DISC", profile.disc],
+    ["VIT", profile.vit],
+    ["CRE", profile.cre],
+  ];
+  const weakest = statEntries.reduce((a, b) => (b[1] < a[1] ? b : a));
+  const weakestLabel: Record<string, string> = {
+    STR: "Strength",
+    INT: "Intellect",
+    DISC: "Discipline",
+    VIT: "Vitality",
+    CRE: "Creativity",
+  };
+  const hasWeakQuest = active.some((t) => t.category === weakest[0]);
 
   return (
     <motion.div
@@ -92,10 +94,16 @@ export function NextQuestNudge({ onRegister }: { onRegister: () => void }) {
       className="hud-frame relative overflow-hidden rounded-sm border border-violet/25 bg-gradient-to-br from-ink/80 to-void-2/80 p-5"
     >
       <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-violet/15 blur-2xl" />
-      <h3 ref={hookRef} className="font-display text-[10px] tracking-[0.35em] text-arc">[NEXT MOVE]</h3>
-      <p className="mt-2 text-sm font-medium text-ivory">{title}</p>
-      <p className="mt-1 text-xs leading-relaxed text-mist">{sub}</p>
-      {active.length === 0 && (
+      <h3 ref={hookRef} className="font-display text-[10px] tracking-[0.35em] text-arc">[FOCUS]</h3>
+      <p className="mt-2 text-sm font-medium text-ivory">
+        Weakest attribute: <span className="text-arc">{weakest[0]} ({weakest[1]})</span>
+      </p>
+      <p className="mt-1 text-xs leading-relaxed text-mist">
+        {weakestLabel[weakest[0]]} is trailing. {hasWeakQuest
+          ? `A ${weakest[0]} quest is already registered today.`
+          : `Clear a ${weakest[0]} quest to rebalance.`}
+      </p>
+      {!hasWeakQuest && (
         <button
           onClick={onRegister}
           className="font-display mt-4 inline-flex items-center gap-1.5 rounded-sm border border-violet/50 bg-violet/20 px-4 py-2 text-[10px] uppercase tracking-widest text-ivory transition-colors hover:bg-violet/40"

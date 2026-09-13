@@ -6,6 +6,7 @@ import { Dumbbell, BookOpen, CalendarCheck, HeartPulse, Sparkles, Check } from "
 import { useAuth } from "../hooks/useAuth";
 import { useGameStore } from "../hooks/useGameStore";
 import { updateDisplayName } from "../services/api";
+import { saveGoals } from "../lib/questGenerator";
 import { characterAssetForLevel } from "../lib/milestones";
 import Button from "../components/ui/Button";
 
@@ -29,6 +30,7 @@ export default function AwakeningPage() {
   async function enterSystem() {
     setBusy(true);
     try {
+      saveGoals(goals);
       await updateDisplayName(name.trim() || "Player");
       await refresh();
       navigate("/home");
@@ -151,6 +153,10 @@ export default function AwakeningPage() {
                 <p className="mt-1 text-xs text-mist">Drink a glass of water and take a 5-minute walk.</p>
                 <p className="mt-2 text-xs text-essence">+50 XP · +VIT · +10 ESSENCE</p>
               </div>
+              <p className="mt-4 text-[11px] leading-relaxed text-mist">
+                The System issues <span className="text-arc">AI-generated daily quests</span> built
+                around your goals and weakest attributes.
+              </p>
               <Button onClick={enterSystem} disabled={busy} className="mt-6 w-full">
                 {busy ? "ENTERING..." : "ENTER THE SYSTEM"}
               </Button>
