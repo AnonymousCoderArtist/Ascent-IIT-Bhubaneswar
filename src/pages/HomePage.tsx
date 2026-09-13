@@ -18,6 +18,7 @@ import AmbientLayer from "../components/world/AmbientLayer";
 import SystemBoot from "../components/system/SystemBoot";
 import { StreakWeek, NextQuestNudge } from "../components/system/HabitHooks";
 import AiSettingsPanel from "../components/system/AiSettingsPanel";
+import RankRoadmap from "../components/system/RankRoadmap";
 import { useGameStore } from "../hooks/useGameStore";
 import { seedAwakeningQuestIfEmpty } from "../services/awakeningSeed";
 import { seedDailyQuestsIfNewDay, regenerateDailyQuests } from "../services/dailyQuests";
@@ -251,6 +252,7 @@ export default function HomePage() {
         onClose={() => setAiOpen(false)}
         onSaved={() => setAiReady(isAiConfigured())}
       />
+      <RankRoadmap />
     </div>
   );
 }
