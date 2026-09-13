@@ -5,3 +5,5 @@ dist
 .vtx
 *.local
 tsconfig.tsbuildinfo
+
+.temp/
