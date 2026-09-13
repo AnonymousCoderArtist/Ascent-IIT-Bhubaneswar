@@ -161,13 +161,13 @@ export default function HomePage() {
           <LevelBar />
         </div>
 
-        {/* TODAY'S QUESTS — left of character, within viewport */}
-        <div className="absolute bottom-20 left-3 z-30 w-64 sm:left-5 sm:w-72">
-          <div className="hud-panel rounded-sm p-3 max-h-[30svh] overflow-y-auto">
-            <p className="font-display text-[9px] tracking-[0.3em] text-violet">TODAY'S QUESTS</p>
-            <div className="mt-2 space-y-2">
+        {/* TODAY'S QUESTS — full-height left panel */}
+        <div className="absolute left-3 top-32 bottom-20 z-30 w-72 sm:left-5 sm:w-80 hidden sm:block">
+          <div className="hud-panel rounded-sm p-4 h-full flex flex-col">
+            <p className="font-display text-[10px] tracking-[0.3em] text-violet shrink-0">TODAY'S QUESTS</p>
+            <div className="mt-3 flex-1 overflow-y-auto space-y-2 pr-1">
               {active.length === 0 && cleared.length === 0 ? (
-                <p className="text-[10px] text-mist">No quests yet. Register one!</p>
+                <p className="text-xs text-mist">No quests yet. Register one!</p>
               ) : (
                 [...active, ...cleared].map((task) => (
                   <QuestCard key={task.id} task={task} onEdit={() => {}} onDelete={() => {}} />
