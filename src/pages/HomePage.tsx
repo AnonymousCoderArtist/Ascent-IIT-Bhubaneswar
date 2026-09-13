@@ -162,7 +162,7 @@ export default function HomePage() {
         </div>
 
         {/* TODAY'S QUESTS — full-height left panel */}
-        <div className="absolute left-3 top-32 bottom-20 z-30 w-72 sm:left-5 sm:w-80 hidden sm:block">
+        <div className="absolute left-20 top-32 bottom-20 z-30 w-72 sm:left-24 sm:w-80 hidden sm:block">
           <div className="hud-panel rounded-sm p-4 h-full flex flex-col">
             <p className="font-display text-[10px] tracking-[0.3em] text-violet shrink-0">TODAY'S QUESTS</p>
             <div className="mt-3 flex-1 overflow-y-auto space-y-2 pr-1">
