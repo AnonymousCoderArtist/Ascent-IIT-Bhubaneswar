@@ -40,7 +40,7 @@ function ScrollToTop() {
 
 function Shell() {
   return (
-    <div className="min-h-screen bg-void text-ivory">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-void text-ivory">
       <ScrollToTop />
       {!backendReady && (
         <div className="fixed top-3 right-3 z-50 rounded border border-essence/20 bg-ink/60 px-2.5 py-1 text-[9px] font-bold tracking-[0.2em] uppercase text-essence/70">
