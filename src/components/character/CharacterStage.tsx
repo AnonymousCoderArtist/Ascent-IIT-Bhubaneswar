@@ -23,15 +23,13 @@ export default function CharacterStage() {
           aria-hidden="true"
           className="h-full w-full scale-110 object-cover"
           initial={{ opacity: 0 }}
-          animate={{ opacity: reduced ? 0.2 : 0.28 }}
+          animate={{ opacity: reduced ? 0.55 : 0.65 }}
           transition={{ duration: 1.4 }}
         />
-        {/* Grey overlay for darker, more transparent background */}
-        <div className="absolute inset-0 bg-void/50" />
-        {/* Vignettes to keep side panels readable */}
-        <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-void/70" />
-        <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-void/90 to-transparent" />
-        <div className="absolute inset-y-0 right-0 w-64 bg-gradient-to-l from-void/90 to-transparent" />
+        {/* Light vignettes only */}
+        <div className="absolute inset-0 bg-gradient-to-t from-void/40 via-transparent to-void/40" />
+        <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-void/50 to-transparent" />
+        <div className="absolute inset-y-0 right-0 w-48 bg-gradient-to-l from-void/50 to-transparent" />
       </div>
 
       {/* Aura ring behind character */}
