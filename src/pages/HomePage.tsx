@@ -147,13 +147,13 @@ export default function HomePage() {
           <MobileStats />
         </div>
 
-        {/* Register quest button: top-right on mobile, bottom-right on desktop */}
+        {/* Register quest button: top on mobile, bottom on desktop */}
         <button
           onClick={() => { uiOpen(); setFormState({ open: true, task: null }); }}
-          className="font-display pointer-events-auto fixed right-3 bottom-44 z-40 flex items-center gap-2 rounded-full border border-violet/60 bg-violet px-3 py-2 text-[10px] uppercase tracking-widest text-ivory shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-colors hover:bg-violet-deep"
+          className="font-display pointer-events-auto fixed top-16 right-3 z-40 flex items-center gap-1.5 rounded-full border border-violet/60 bg-violet px-2.5 py-1.5 text-[9px] uppercase tracking-widest text-ivory shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-colors hover:bg-violet-deep sm:top-auto sm:bottom-4 sm:right-5"
           aria-label="Register a new quest"
         >
-          <Plus size={16} aria-hidden="true" />
+          <Plus size={12} aria-hidden="true" />
           NEW QUEST
         </button>
 

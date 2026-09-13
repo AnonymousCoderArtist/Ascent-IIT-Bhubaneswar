@@ -20,7 +20,7 @@ export default function RankRoadmap() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="pointer-events-auto fixed bottom-5 right-5 z-40 flex items-center gap-1.5 rounded-full border border-fuchsia/30 bg-ink/80 px-3 py-2 text-[10px] font-display font-bold tracking-[0.3em] text-ivory backdrop-blur-sm transition-colors hover:border-fuchsia/50"
+        className="pointer-events-auto fixed top-16 right-16 z-40 flex items-center gap-1 rounded-full border border-fuchsia/30 bg-ink/80 px-2 py-1.5 text-[9px] font-display font-bold tracking-[0.3em] text-ivory backdrop-blur-sm transition-colors hover:border-fuchsia/50"
         aria-label="Rank roadmap"
       >
         <Star size={10} className="text-fuchsia" aria-hidden="true" />
