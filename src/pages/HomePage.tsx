@@ -167,10 +167,32 @@ export default function HomePage() {
             <p className="font-display text-[10px] tracking-[0.3em] text-violet shrink-0">TODAY'S QUESTS</p>
             <div className="mt-3 flex-1 overflow-y-auto space-y-2 pr-1">
               {active.length === 0 && cleared.length === 0 ? (
-                <p className="text-xs text-mist">No quests yet. Register one!</p>
+                <div className="flex flex-col items-center justify-center py-8">
+                  <p className="text-xs text-mist">No quests yet</p>
+                  <p className="mt-1 text-[10px] text-mist/50">Register one to start</p>
+                </div>
               ) : (
                 [...active, ...cleared].map((task) => (
-                  <QuestCard key={task.id} task={task} onEdit={() => {}} onDelete={() => {}} />
+                  <div key={task.id} className={`flex items-center gap-2 rounded-sm border border-violet/10 p-2.5 ${task.completed ? "opacity-50" : ""}`}>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-ink text-violet">
+                      {task.category}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={`truncate text-xs font-semibold ${task.completed ? "text-mist line-through" : "text-ivory"}`}>
+                        {task.title}
+                      </p>
+                      <p className="text-[9px] text-mist">{task.difficulty} · {task.estimatedMinutes}m · +{task.category}</p>
+                    </div>
+                    {!task.completed && (
+                      <button
+                        onClick={() => {}}
+                        aria-label="Complete quest"
+                        className="shrink-0 rounded-sm border border-violet/50 bg-violet px-2 py-1 text-[9px] font-display font-bold tracking-widest text-ivory"
+                      >
+                        CLEAR
+                      </button>
+                    )}
+                  </div>
                 ))
               )}
             </div>
