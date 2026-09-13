@@ -161,6 +161,22 @@ export default function HomePage() {
           <LevelBar />
         </div>
 
+        {/* TODAY'S QUESTS — left of character, within viewport */}
+        <div className="absolute bottom-20 left-3 z-30 w-64 sm:left-5 sm:w-72">
+          <div className="hud-panel rounded-sm p-3 max-h-[30svh] overflow-y-auto">
+            <p className="font-display text-[9px] tracking-[0.3em] text-violet">TODAY'S QUESTS</p>
+            <div className="mt-2 space-y-2">
+              {active.length === 0 && cleared.length === 0 ? (
+                <p className="text-[10px] text-mist">No quests yet. Register one!</p>
+              ) : (
+                [...active, ...cleared].map((task) => (
+                  <QuestCard key={task.id} task={task} onEdit={() => {}} onDelete={() => {}} />
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Scroll hint */}
         <motion.div
           className="absolute bottom-1 left-1/2 z-20 hidden -translate-x-1/2 text-mist/50 sm:block"
