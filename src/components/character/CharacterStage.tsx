@@ -88,7 +88,7 @@ export default function CharacterStage() {
         key={charImg}
         src={charImg}
         alt={`Your character at level ${level}`}
-        className="relative z-10 mt-24 max-h-[56vh] max-w-[80vw] object-contain drop-shadow-[0_12px_50px_rgba(7,8,11,0.9)] sm:mt-32 sm:max-h-[62vh]"
+        className="relative z-10 mt-16 max-h-[40vh] max-w-[70vw] object-contain drop-shadow-[0_12px_50px_rgba(7,8,11,0.9)] sm:mt-32 sm:max-h-[62vh]"
         initial={{ opacity: 0, y: 20, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.9, ease: "easeOut" }}

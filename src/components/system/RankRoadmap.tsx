@@ -5,6 +5,7 @@ import { useGameStore } from "../../hooks/useGameStore";
 import { characterAssetForLevel, worldAssetForLevel, WORLD_MILESTONE_LABELS } from "../../lib/milestones";
 import { levelDisplay, rankForLevel, thresholdForLevel } from "../../lib/progression";
 import { RankBadge } from "../ui/GameArt";
+import { uiTick } from "../../lib/sfx";
 
 export default function RankRoadmap() {
   const { profile } = useGameStore();
@@ -19,7 +20,7 @@ export default function RankRoadmap() {
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { uiTick(); setOpen(true); }}
         className="pointer-events-auto fixed top-16 right-16 z-40 flex items-center gap-1 rounded-full border border-fuchsia/30 bg-ink/80 px-2 py-1.5 text-[9px] font-display font-bold tracking-[0.3em] text-ivory backdrop-blur-sm transition-colors hover:border-fuchsia/50"
         aria-label="Rank roadmap"
       >
@@ -43,7 +44,7 @@ export default function RankRoadmap() {
               onClick={(e) => e.stopPropagation()}
             >
               <button
-                onClick={() => setOpen(false)}
+                onClick={() => { uiTick(); setOpen(false); }}
                 className="absolute right-4 top-4 text-mist hover:text-ivory"
                 aria-label="Close"
               >

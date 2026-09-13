@@ -2,6 +2,7 @@
 import { Home, Landmark, Dumbbell, BookOpen, Hammer, TowerControl, Lock } from "lucide-react";
 import { ZONES } from "../../lib/catalog";
 import { useGameStore } from "../../hooks/useGameStore";
+import { uiTick } from "../../lib/sfx";
 
 const ICONS: Record<string, typeof Home> = {
   Home,
@@ -17,7 +18,7 @@ export default function ZoneRail() {
   const level = profile?.level ?? 1;
 
   return (
-    <nav aria-label="World zones" className="pointer-events-auto flex flex-col gap-2">
+    <nav aria-label="World zones" className="pointer-events-auto flex flex-col gap-1">
       {ZONES.map((zone) => {
         const unlocked = level >= zone.level;
         const Icon = ICONS[zone.icon] ?? Home;
@@ -27,8 +28,9 @@ export default function ZoneRail() {
           <div key={zone.key} className="group relative">
             <button
               disabled={!unlocked}
+              onClick={() => uiTick()}
               aria-label={`${zone.name}${unlocked ? "" : ` — unlocks at level ${zone.level}`}`}
-              className={`flex h-11 w-11 items-center justify-center rounded-sm border transition-all ${
+              className={`flex h-9 w-9 items-center justify-center rounded-sm border transition-all ${
                 unlocked
                   ? "border-violet/30 bg-ink/70 text-violet hover:bg-violet/20"
                   : "cursor-not-allowed border-white/5 bg-ink/40 text-mist/40"

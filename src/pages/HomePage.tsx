@@ -211,8 +211,8 @@ export default function HomePage() {
         </motion.div>
       </div>
 
-      {/* Mobile quest section — all content, fits screen */}
-      <section aria-label="Today's quests" className="relative mx-auto w-full max-w-full overflow-hidden px-2 pb-16 pt-10 sm:hidden">
+      {/* Mobile quest section — all content, fits screen, scrollable */}
+      <section aria-label="Today's quests" className="relative mx-auto w-full max-w-full overflow-y-auto overflow-x-hidden px-2 pb-16 pt-10 sm:hidden">
         <div className="w-full">
           <div className="flex items-center justify-between">
             <p className="font-display text-xs tracking-[0.3em] text-violet">TODAY'S QUESTS</p>
