@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Backpack, TrendingUp, LogOut, Volume2, VolumeX, Sparkles } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useGameStore } from "../../hooks/useGameStore";
-import { isMuted, toggleMute } from "../../lib/sfx";
+import { uiTick, isMuted, toggleMute } from "../../lib/sfx";
 import { isAiConfigured } from "../../lib/aiSettings";
 import AiSettingsPanel from "./AiSettingsPanel";
 import { useState } from "react";
@@ -31,9 +31,9 @@ export default function SystemMenu() {
           return (
             <button
               key={path}
-              onClick={() => navigate(path)}
+              onClick={() => { uiTick(); navigate(path); }}
               aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium tracking-widest uppercase transition-colors ${
+              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium tracking-widest uppercase transition-colors sm:px-4 sm:py-2 ${
                 active ? "bg-violet/20 text-ivory" : "text-mist hover:text-ivory"
               }`}
             >
@@ -50,10 +50,10 @@ export default function SystemMenu() {
           </span>
         </div>
         <button
-          onClick={() => setAiOpen(true)}
+          onClick={() => { uiTick(); setAiOpen(true); }}
           aria-label="AI provider settings"
           title="AI settings — bring your own key"
-          className={`flex items-center gap-1 rounded-full px-3 py-2 text-xs uppercase tracking-widest transition-colors ${
+          className={`flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs uppercase tracking-widest transition-colors sm:px-3 sm:py-2 ${
             aiReady ? "text-arc hover:text-ivory" : "text-mist hover:text-ivory"
           }`}
         >
@@ -64,17 +64,17 @@ export default function SystemMenu() {
           )}
         </button>
         <button
-          onClick={() => setMuted(toggleMute())}
+          onClick={() => { uiTick(); setMuted(toggleMute()) }}
           aria-label={muted ? "Unmute system sounds" : "Mute system sounds"}
           aria-pressed={muted}
-          className="flex items-center rounded-full px-3 py-2 text-xs uppercase tracking-widest text-mist transition-colors hover:text-ivory"
+          className="flex items-center rounded-full px-2.5 py-1.5 text-xs uppercase tracking-widest text-mist transition-colors hover:text-ivory sm:px-3 sm:py-2"
         >
           {muted ? <VolumeX size={14} aria-hidden="true" /> : <Volume2 size={14} aria-hidden="true" />}
           <span className="sr-only">{muted ? "Unmute" : "Mute"}</span>
         </button>
         <button
-          onClick={() => signOut().then(() => navigate("/"))}
-          className="flex items-center gap-1 rounded-full px-3 py-2 text-xs uppercase tracking-widest text-mist transition-colors hover:text-danger"
+          onClick={() => { uiTick(); signOut().then(() => navigate("/")); }}
+          className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs uppercase tracking-widest text-mist transition-colors hover:text-danger sm:px-3 sm:py-2"
         >
           <LogOut size={14} aria-hidden="true" />
           <span className="sr-only">Sign out</span>
