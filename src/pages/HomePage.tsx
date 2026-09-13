@@ -211,43 +211,41 @@ export default function HomePage() {
         </motion.div>
       </div>
 
-      {/* Mobile quest panel — fixed bottom, within viewport */}
-      <section aria-label="Today's quests" className="fixed bottom-0 left-0 right-0 z-40 max-w-full overflow-x-hidden sm:hidden">
-        <div className="hud-panel rounded-t-sm border-b-0 px-3 pb-2 pt-1.5 max-w-full overflow-x-hidden" style={{ maxHeight: "35svh" }}>
-          <div className="flex items-center justify-between">
-            <p className="font-display text-[10px] tracking-[0.3em] text-violet">TODAY'S QUESTS</p>
-            <div className="flex items-center gap-2">
-              {aiReady ? (
-                <span className="rounded-full border border-arc/40 bg-arc/10 px-2 py-0.5 text-[8px] font-bold tracking-widest text-arc">AI DAILY</span>
-              ) : (
-                <button onClick={() => setAiOpen(true)} className="font-display rounded-full border border-arc/40 bg-arc/10 px-2 py-0.5 text-[8px] font-bold tracking-widest text-arc transition-colors hover:bg-arc/25">+ AI KEY</button>
-              )}
-              <span className="text-[10px] tabular-nums text-mist">{active.length} active</span>
+      {/* Habit zone — scrollable, all quests visible */}
+      <section aria-label="Today's quests" className="relative mx-auto max-w-2xl px-4 pb-16 pt-10 sm:hidden">
+        <div className="grid gap-4">
+          <div>
+            <div className="flex items-center justify-between">
+              <p className="font-display text-sm tracking-[0.35em] text-violet">TODAY'S QUESTS</p>
+              <div className="flex items-center gap-2">
+                {aiReady ? (
+                  <span className="rounded-full border border-arc/40 bg-arc/10 px-2 py-0.5 text-[9px] font-bold tracking-widest text-arc">AI DAILY</span>
+                ) : (
+                  <button onClick={() => setAiOpen(true)} className="font-display rounded-full border border-arc/40 bg-arc/10 px-2.5 py-1 text-[9px] font-bold tracking-widest text-arc transition-colors hover:bg-arc/25">+ ADD AI KEY</button>
+                )}
+                <span className="text-xs tabular-nums text-mist">{active.length} active · {cleared.length} cleared</span>
+              </div>
             </div>
-          </div>
-          <div className="mt-1 max-h-[28svh] overflow-y-auto space-y-1.5">
             {active.length === 0 && cleared.length === 0 ? (
-              <div className="flex items-center justify-between rounded-sm border border-violet/10 bg-ink/50 px-3 py-2">
-                <p className="text-[10px] text-mist">No quests yet</p>
-                <button onClick={() => setFormState({ open: true, task: null })} className="rounded-sm border border-violet/50 bg-violet px-2 py-0.5 text-[9px] font-display font-bold tracking-widest text-ivory">REGISTER</button>
+              <div className="hud-frame hud-panel mt-4 rounded-sm p-8 text-center">
+                <p className="text-sm text-mist">No quests registered. The System awaits your first command.</p>
+                <button onClick={() => setFormState({ open: true, task: null })} className="mt-5 font-display rounded-sm border border-violet/50 bg-violet px-6 py-2.5 text-xs uppercase tracking-widest text-ivory">REGISTER FIRST QUEST</button>
               </div>
             ) : (
               <>
-                <ul className="space-y-1.5">
-                  {[...active, ...cleared].slice(0, 3).map((task) => (
-                    <div key={task.id} className={`flex items-center gap-2 rounded-sm border border-violet/10 bg-ink/50 px-2.5 py-1.5 ${task.completed ? "opacity-50" : ""}`}>
-                      <p className="min-w-0 flex-1 truncate text-[11px] font-semibold">{task.title}</p>
-                      <span className="text-[8px] text-mist">{task.difficulty}</span>
-                      {!task.completed && (
-                        <button onClick={() => {}} className="shrink-0 rounded-sm border border-violet/50 bg-violet px-1.5 py-0.5 text-[8px] font-display font-bold tracking-widest text-ivory">CLEAR</button>
-                      )}
-                    </div>
-                  ))}
+                <ul className="mt-4 space-y-2.5">
+                  <AnimatePresence initial={false}>
+                    {[...active, ...cleared].map((task) => (
+                      <QuestCard key={task.id} task={task} onEdit={(t) => setFormState({ open: true, task: t })} onDelete={(t) => { if (confirm(`Delete "${t.title}"?`)) removeTask(t.id); }} />
+                    ))}
+                  </AnimatePresence>
                 </ul>
-                <button onClick={() => setFormState({ open: true, task: null })} className="w-full rounded-sm border border-violet/30 bg-ink/50 px-3 py-1.5 text-[9px] font-display font-bold tracking-widest text-mist hover:text-ivory">+ REGISTER MORE</button>
+                <button onClick={generateMore} disabled={generating} className="mt-4 flex w-full items-center justify-center rounded-sm border border-arc/50 bg-arc/15 px-4 py-3 text-xs uppercase tracking-widest text-arc transition-colors hover:bg-arc/30 disabled:opacity-50">{generating ? "GENERATING..." : aiReady ? "GENERATE NEW QUESTS [AI]" : "GENERATE NEW QUESTS"}</button>
               </>
             )}
           </div>
+          <StreakWeek />
+          <NextQuestNudge onRegister={() => setFormState({ open: true, task: null })} />
         </div>
       </section>
 
