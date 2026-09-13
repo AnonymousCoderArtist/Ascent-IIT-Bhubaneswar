@@ -23,11 +23,13 @@ export default function CharacterStage() {
           aria-hidden="true"
           className="h-full w-full scale-110 object-cover"
           initial={{ opacity: 0 }}
-          animate={{ opacity: reduced ? 0.35 : 0.45 }}
+          animate={{ opacity: reduced ? 0.2 : 0.28 }}
           transition={{ duration: 1.4 }}
         />
+        {/* Grey overlay for darker, more transparent background */}
+        <div className="absolute inset-0 bg-void/50" />
         {/* Vignettes to keep side panels readable */}
-        <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-void/60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-void via-transparent to-void/70" />
         <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-void/90 to-transparent" />
         <div className="absolute inset-y-0 right-0 w-64 bg-gradient-to-l from-void/90 to-transparent" />
       </div>
@@ -53,7 +55,7 @@ export default function CharacterStage() {
         key={charImg}
         src={charImg}
         alt={`Your character at level ${level}`}
-        className="relative z-10 max-h-[62vh] max-w-[80vw] object-contain drop-shadow-[0_12px_50px_rgba(7,8,11,0.9)] sm:max-h-[68vh]"
+        className="relative z-10 mt-24 max-h-[56vh] max-w-[80vw] object-contain drop-shadow-[0_12px_50px_rgba(7,8,11,0.9)] sm:mt-32 sm:max-h-[62vh]"
         initial={{ opacity: 0, y: 20, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.9, ease: "easeOut" }}

@@ -119,7 +119,27 @@ export async function localSignUp(email: string, password: string): Promise<{ id
   profiles[id] = profile;
   lsSet(LS.profile, profiles);
   seedLocalInventory();
+  seedAwakeningQuest(id);
   return { id, email };
+}
+
+function seedAwakeningQuest(userId: string): void {
+  const task: Task = {
+    id: `task_${Date.now()}`,
+    userId,
+    title: "AWAKENING QUEST",
+    description: "Drink 2 liters of water today and take a 10-minute walk.",
+    category: "VIT",
+    difficulty: "easy",
+    estimatedMinutes: 15,
+    dueDate: null,
+    recurrence: "none",
+    completed: false,
+    createdAt: new Date().toISOString(),
+  };
+  const tasks = lsGet<Record<string, Task>>(LS.tasks, {});
+  tasks[task.id] = task;
+  lsSet(LS.tasks, tasks);
 }
 
 export async function localSignIn(email: string, password: string): Promise<{ id: string; email: string }> {

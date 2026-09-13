@@ -43,8 +43,8 @@ function Shell() {
     <div className="min-h-screen bg-void text-ivory">
       <ScrollToTop />
       {!backendReady && (
-        <div className="fixed top-3 left-1/2 z-50 -translate-x-1/2 rounded border border-essence/30 bg-ink px-4 py-2 text-xs text-essence">
-          [SYSTEM] LOCAL MODE — Running on this device.
+        <div className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-full border border-essence/20 bg-ink/80 backdrop-blur-sm px-5 py-2 text-[10px] font-bold tracking-[0.3em] uppercase text-essence shadow-[0_0_20px_rgba(139,92,246,0.1)]">
+          LOCAL MODE
         </div>
       )}
       <Routes>
