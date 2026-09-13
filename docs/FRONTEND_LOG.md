@@ -189,3 +189,23 @@ All images from `incoming/` processed into `public/`:
 - Dev server starts clean (Vite 5.4.21, 257ms).
 - `npm run build` passes.
 - Auth flow: signup → refreshSession → navigate → RequireAuth sees session → no redirect loop.
+
+## 2026-09-13 — UI polish & mandatory quest
+
+### UI fixes
+
+- **LOCAL MODE banner**: moved from top-center to bottom-center, made smaller, rounded-full, with backdrop blur and subtle glow. Less intrusive.
+- **Character**: moved down (mt-24 / sm:mt-32), reduced max height slightly (56vh / 62vh).
+- **Background**: added `bg-void/50` grey overlay, reduced world image opacity to 0.28, strengthened vignettes. Overall darker and more transparent.
+
+### Mandatory Level 1 quest
+
+- **Every new account** now gets an AWAKENING QUEST automatically on signup: "Drink 2 liters of water today and take a 10-minute walk." (easy, VIT, 15 min).
+- Added `seedAwakeningQuest()` in `localBackend.ts`, called from `localSignUp`.
+- `seedAwakeningQuestIfEmpty()` in HomePage remains as backup/idempotent safety net.
+
+### Verification
+
+- `npm run build` passes (6.2s), 0 TypeScript errors.
+- Fresh signup → HomePage shows 1+ quest immediately.
+- Existing accounts → no duplicate seeding (function is idempotent).
