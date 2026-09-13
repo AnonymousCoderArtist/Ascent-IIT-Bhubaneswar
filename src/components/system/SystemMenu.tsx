@@ -1,9 +1,11 @@
 // SystemMenu — top-center menu bar with HUD styling.
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Backpack, TrendingUp, LogOut, Volume2, VolumeX } from "lucide-react";
+import { Home, Backpack, TrendingUp, LogOut, Volume2, VolumeX, Sparkles } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useGameStore } from "../../hooks/useGameStore";
 import { isMuted, toggleMute } from "../../lib/sfx";
+import { isAiConfigured } from "../../lib/aiSettings";
+import AiSettingsPanel from "./AiSettingsPanel";
 import { useState } from "react";
 
 const ITEMS = [
@@ -18,6 +20,8 @@ export default function SystemMenu() {
   const { signOut } = useAuth();
   const { profile } = useGameStore();
   const [muted, setMuted] = useState(isMuted());
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiReady, setAiReady] = useState(isAiConfigured());
 
   return (
     <header className="pointer-events-auto absolute left-1/2 top-4 z-40 -translate-x-1/2">
@@ -46,6 +50,20 @@ export default function SystemMenu() {
           </span>
         </div>
         <button
+          onClick={() => setAiOpen(true)}
+          aria-label="AI provider settings"
+          title="AI settings — bring your own key"
+          className={`flex items-center gap-1 rounded-full px-3 py-2 text-xs uppercase tracking-widest transition-colors ${
+            aiReady ? "text-arc hover:text-ivory" : "text-mist hover:text-ivory"
+          }`}
+        >
+          <Sparkles size={14} aria-hidden="true" />
+          <span className="sr-only">AI settings</span>
+          {aiReady && (
+            <span className="h-1.5 w-1.5 rounded-full bg-arc shadow-[0_0_6px_rgba(79,140,255,0.9)]" aria-hidden="true" />
+          )}
+        </button>
+        <button
           onClick={() => setMuted(toggleMute())}
           aria-label={muted ? "Unmute system sounds" : "Mute system sounds"}
           aria-pressed={muted}
@@ -62,6 +80,7 @@ export default function SystemMenu() {
           <span className="sr-only">Sign out</span>
         </button>
       </nav>
+      <AiSettingsPanel open={aiOpen} onClose={() => setAiOpen(false)} onSaved={() => setAiReady(isAiConfigured())} />
     </header>
   );
 }

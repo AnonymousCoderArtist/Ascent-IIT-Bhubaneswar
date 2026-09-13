@@ -17,11 +17,12 @@ import WorldCanvas from "../components/world/WorldCanvas";
 import AmbientLayer from "../components/world/AmbientLayer";
 import SystemBoot from "../components/system/SystemBoot";
 import { StreakWeek, NextQuestNudge } from "../components/system/HabitHooks";
+import AiSettingsPanel from "../components/system/AiSettingsPanel";
 import { useGameStore } from "../hooks/useGameStore";
 import { seedAwakeningQuestIfEmpty } from "../services/awakeningSeed";
 import { seedDailyQuestsIfNewDay, regenerateDailyQuests } from "../services/dailyQuests";
 import { useSystemMessage } from "../components/system/SystemMessage";
-import { isAiConfigured } from "../lib/env";
+import { isAiConfigured } from "../lib/aiSettings";
 
 export default function HomePage() {
   const { tasks, loading, error, removeTask, refresh, profile } = useGameStore();
@@ -29,6 +30,8 @@ export default function HomePage() {
   const [formState, setFormState] = useState<QuestFormState>({ open: false, task: null });
   const [booting, setBooting] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiReady, setAiReady] = useState(isAiConfigured());
 
   // Daily quest engine: first load of the day seeds necessary + AI quests.
   // Brand-new players (no tasks at all) get the AWAKENING QUEST first (PRD 5.3).
@@ -175,10 +178,17 @@ export default function HomePage() {
             <div className="flex items-center justify-between">
               <h2 className="font-display text-sm tracking-[0.35em] text-violet">TODAY&apos;S QUESTS</h2>
               <div className="flex items-center gap-2">
-                {isAiConfigured() && (
+                {aiReady ? (
                   <span className="rounded-full border border-arc/40 bg-arc/10 px-2 py-0.5 text-[9px] font-bold tracking-widest text-arc">
                     AI DAILY
                   </span>
+                ) : (
+                  <button
+                    onClick={() => setAiOpen(true)}
+                    className="font-display rounded-full border border-arc/40 bg-arc/10 px-2.5 py-1 text-[9px] font-bold tracking-widest text-arc transition-colors hover:bg-arc/25"
+                  >
+                    + ADD AI KEY
+                  </button>
                 )}
                 <span className="text-xs tabular-nums text-mist">
                   {active.length} active · {cleared.length} cleared
@@ -220,7 +230,7 @@ export default function HomePage() {
                 >
                   {generating
                     ? "GENERATING..."
-                    : isAiConfigured()
+                    : aiReady
                       ? "GENERATE NEW QUESTS [AI]"
                       : "GENERATE NEW QUESTS"}
                 </button>
@@ -236,6 +246,11 @@ export default function HomePage() {
       </section>
 
       <QuestForm state={formState} onClose={() => setFormState({ open: false, task: null })} />
+      <AiSettingsPanel
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        onSaved={() => setAiReady(isAiConfigured())}
+      />
     </div>
   );
 }
