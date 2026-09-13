@@ -176,3 +176,16 @@ All images from `incoming/` processed into `public/`:
 - `npm run build` passes (4.8s), 0 TypeScript errors.
 - All 19 image files committed to `public/`.
 - Ready for `npx vercel --prod` deployment.
+
+## 2026-09-13 — Auth redirect loop fix
+
+### Bug fix
+
+- **Infinite update depth warning** on AuthPage and RequireAuth/Navigate — caused by `localSignUp`/`localSignIn` storing session in localStorage but `AuthProvider` never updating its React state from it. `RequireAuth` saw `session=null`, redirected to `/auth`, which navigated to `/home` (session found), redirected back to `/auth`, loop.
+- **Fix**: After `localSignUp`/`localSignIn` in `AuthPage.tsx`, call `refreshSession()` from `useAuth` before navigating. This updates AuthContext session state from localStorage so `RequireAuth` sees the session correctly.
+
+### Verification
+
+- Dev server starts clean (Vite 5.4.21, 257ms).
+- `npm run build` passes.
+- Auth flow: signup → refreshSession → navigate → RequireAuth sees session → no redirect loop.
