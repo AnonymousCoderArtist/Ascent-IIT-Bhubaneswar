@@ -121,3 +121,18 @@ Only `character-l1.png` + `world-l1.webp` generated so far. `src/lib/milestones.
 
 - `npm run build` — 0 TS errors (main 675KB / lazy three 747KB chunks).
 - Dev-server smoke test — /, /auth, /home, /inventory, /progress, /awakening all 200.
+
+### Checkpoint 10: AI daily quests (Gemini) + necessary dailies
+
+- **AI quest generation** (`src/lib/questGenerator.ts`): real Gemini 2.5 Flash calls with JSON response mode, strict validation (category/difficulty/minutes clamped, titles capped), once-per-day dedup via localStorage. Onboarding goals (saved to localStorage in Awakening) + weakest attributes feed the prompt. Deterministic weakest-stat fallback if no key / network / parse failure — app fully works without AI.
+- **Key handling**: `VITE_GEMINI_API_KEY` lives in `.env` (gitignored, never committed). Client-side key is a hackathon tradeoff — for production, move generation to the `recommend-quest` Edge Function (backend agent) and keep the key server-side. Key usage: 3 test calls total during development.
+- **Daily seeding** (`src/services/dailyQuests.ts`): first Home load of each day registers 4 necessary baseline quests (water, walk, read, tidy — recurrence: daily) + 3 AI quests. Idempotent by title. Manual "GENERATE NEW QUESTS [AI]" button under Today's Quests triggers a fresh AI call. New players still get the AWAKENING QUEST first (PRD 5.3).
+- **Goal persistence**: Awakening step 2 choices saved via `saveGoals()` and sent to the generator.
+- **Removed canned nudge copy** (the "AI slop"): NextQuestNudge now shows real data — weakest attribute + whether a matching quest is registered, with a register shortcut when it isn't.
+- **Quest editing**: add/edit/delete quests already in place (QuestCard pencil/trash + QuestForm modal + NEW QUEST button) — covers "user can edit or add own quest in settings".
+- **Store cut**: InventoryPage no longer shows the essence store (no backend purchase endpoint); shows owned items + level-based unlocks only.
+
+### Verification (Checkpoint 10)
+
+- `npm run build` 0 errors; all routes 200 on dev-server smoke test.
+- Gemini integration tested live with the real key (JSON mode, 3 calls total).
