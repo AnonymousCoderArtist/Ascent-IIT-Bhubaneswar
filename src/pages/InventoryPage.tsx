@@ -37,8 +37,9 @@ export default function InventoryPage() {
 
   const ownedKeys = new Set(items.map((i) => i.itemKey));
   const level = profile?.level ?? 1;
+  // Level-unlocked free items only — the essence store is cut for the MVP
+  // (no backend purchase endpoint yet).
   const unlocked = store.filter((c) => !ownedKeys.has(c.key) && level >= c.unlocksAtLevel && c.essenceCost === 0);
-  const purchasable = store.filter((c) => !ownedKeys.has(c.key) && c.essenceCost > 0 && level >= c.unlocksAtLevel);
 
   return (
     <div className="relative min-h-screen bg-void">
@@ -114,25 +115,6 @@ export default function InventoryPage() {
                           <li key={c.key} className="rounded-sm border border-arc/25 bg-arc/5 p-3">
                             <Icon size={18} className="text-arc" aria-hidden="true" />
                             <p className="mt-2 truncate text-xs font-semibold text-ivory">{c.name}</p>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </section>
-                )}
-
-                {purchasable.length > 0 && (
-                  <section aria-label="Store" className="mt-6">
-                    <h2 className="font-display text-[10px] tracking-[0.35em] text-amber">SYSTEM STORE</h2>
-                    <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      {purchasable.map((c) => {
-                        const Icon = TYPE_ICONS[c.itemType] ?? Package;
-                        const affordable = (profile?.essence ?? 0) >= c.essenceCost;
-                        return (
-                          <li key={c.key} className="hud-panel rounded-sm p-3">
-                            <Icon size={18} className={affordable ? "text-amber" : "text-mist/40"} aria-hidden="true" />
-                            <p className="mt-2 truncate text-xs font-semibold text-ivory">{c.name}</p>
-                            <p className="mt-1 text-[10px] tabular-nums text-mist">{c.essenceCost} ESSENCE</p>
                           </li>
                         );
                       })}
