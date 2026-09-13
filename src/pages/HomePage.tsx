@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, ChevronDown } from "lucide-react";
+import { uiOpen, uiTick } from "../lib/sfx";
 import SystemMenu from "../components/system/SystemMenu";
 import ZoneRail from "../components/system/ZoneRail";
 import StatPanel from "../components/system/StatPanel";
@@ -120,7 +121,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-void">
+    <div className="relative min-h-screen overflow-x-hidden bg-void">
       {booting && <SystemBoot onDone={() => setBooting(false)} />}
 
       {/* Full-viewport HUD stage */}
@@ -148,8 +149,8 @@ export default function HomePage() {
 
         {/* Register quest button: top-right on mobile, bottom-right on desktop */}
         <button
-          onClick={() => setFormState({ open: true, task: null })}
-          className="font-display pointer-events-auto absolute right-3 top-20 z-30 flex items-center gap-2 rounded-full border border-violet/60 bg-violet px-4 py-3 text-xs uppercase tracking-widest text-ivory shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-colors hover:bg-violet-deep sm:right-5 md:top-auto md:bottom-28"
+          onClick={() => { uiOpen(); setFormState({ open: true, task: null }); }}
+          className="font-display pointer-events-auto fixed right-3 bottom-24 z-40 flex items-center gap-2 rounded-full border border-violet/60 bg-violet px-4 py-3 text-xs uppercase tracking-widest text-ivory shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-colors hover:bg-violet-deep"
           aria-label="Register a new quest"
         >
           <Plus size={16} aria-hidden="true" />

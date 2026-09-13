@@ -5,6 +5,15 @@ import { motion, useReducedMotion } from "framer-motion";
 import { characterAssetForLevel, worldAssetForLevel } from "../../lib/milestones";
 import { useGameStore } from "../../hooks/useGameStore";
 
+const FLOATING_CIRCLES = [
+  { size: 120, x: "10%", y: "15%", color: "rgba(139,92,246,0.12)", dur: 8, delay: 0 },
+  { size: 80, x: "80%", y: "20%", color: "rgba(168,85,247,0.1)", dur: 10, delay: 2 },
+  { size: 160, x: "70%", y: "70%", color: "rgba(139,92,246,0.08)", dur: 12, delay: 4 },
+  { size: 60, x: "20%", y: "65%", color: "rgba(76,29,149,0.12)", dur: 7, delay: 1 },
+  { size: 200, x: "50%", y: "90%", color: "rgba(139,92,246,0.06)", dur: 14, delay: 3 },
+  { size: 100, x: "85%", y: "45%", color: "rgba(168,85,247,0.1)", dur: 9, delay: 5 },
+];
+
 export default function CharacterStage() {
   const { profile } = useGameStore();
   const level = profile?.level ?? 1;
@@ -26,11 +35,37 @@ export default function CharacterStage() {
           animate={{ opacity: reduced ? 0.55 : 0.65 }}
           transition={{ duration: 1.4 }}
         />
-        {/* Light vignettes only */}
         <div className="absolute inset-0 bg-gradient-to-t from-void/40 via-transparent to-void/40" />
         <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-void/50 to-transparent" />
         <div className="absolute inset-y-0 right-0 w-48 bg-gradient-to-l from-void/50 to-transparent" />
       </div>
+
+      {/* Floating background circles */}
+      {!reduced && FLOATING_CIRCLES.map((c, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            width: c.size,
+            height: c.size,
+            left: c.x,
+            top: c.y,
+            background: c.color,
+            filter: "blur(40px)",
+          }}
+          animate={{
+            y: [0, -30, 0],
+            scale: [1, 1.1, 1],
+            opacity: [0.5, 1, 0.5],
+          }}
+          transition={{
+            duration: c.dur,
+            delay: c.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
 
       {/* Aura ring behind character */}
       {!reduced && (
