@@ -5,13 +5,12 @@
 import { supabase } from "../lib/supabase";
 import { env } from "../lib/env";
 import {
-  localSignUp, localSignIn, localSignOut, localGetSession, localEnsureSession,
   localGetProfile, localUpdateDisplayName,
   localListTasks, localCreateTask, localUpdateTask, localDeleteTask,
-  localCompleteQuest, localListInventory, localListCatalog, localListQuestExamples, localRecommendQuest,
+  localCompleteQuest, localListInventory, localListCatalog, localListQuestExamples,
   ensureLocalSeeds,
 } from "./localBackend";
-import type { Profile, Task, CompleteQuestResponse, InventoryItem, CatalogItem, QuestExample } from "../types/contract";
+import type { Profile, Task, CompleteQuestResponse, InventoryItem } from "../types/contract";
 
 ensureLocalSeeds();
 
@@ -31,7 +30,7 @@ export async function listTasks(): Promise<Task[]> {
 }
 
 export async function createTask(input: Partial<TaskInput>): Promise<Task> {
-  if (useLocal()) return localCreateTask(input);
+  if (useLocal()) return localCreateTask(input as any);
   const { data, error } = await supabase.from("tasks").insert(mapTaskInput(input)).select().single();
   if (error) throw error;
   return mapTask(data);

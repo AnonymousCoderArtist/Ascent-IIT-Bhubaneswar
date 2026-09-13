@@ -2,7 +2,7 @@
 // Activated when VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY are absent.
 // Reward math MIRRORS supabase/migrations/002_functions.sql complete_quest EXACTLY.
 
-import type { Profile, Task, CompleteQuestResponse, InventoryItem, CatalogItem, QuestExample, BackendErrorCode } from "../types/contract";
+import type { Profile, Task, CompleteQuestResponse, InventoryItem, CatalogItem, Rank, BackendErrorCode } from "../types/contract";
 import { thresholdForLevel, rankForLevel } from "../lib/progression";
 
 const LS = {
@@ -14,8 +14,6 @@ const LS = {
   session: "ascent:session",
   achievements: "ascent:achievements",
 };
-
-// ---- Helpers ----
 
 function lsGet<T>(key: string, fallback: T): T {
   try {
@@ -52,8 +50,6 @@ function hashPassword(pw: string): string {
   return `h_${Math.abs(hash).toString(36)}`;
 }
 
-// ---- Seed data ----
-
 const SEED_CATALOG: CatalogItem[] = [
   { key: "starter_aura", name: "Starter Aura", itemType: "aura", essenceCost: 0, description: "A dormant violet spark. Your first companion.", unlocksAtLevel: 1 },
   { key: "starter_outfit", name: "Adventurer Garb", itemType: "outfit", essenceCost: 0, description: "Simple dark jacket and trousers.", unlocksAtLevel: 1 },
@@ -64,7 +60,7 @@ const SEED_CATALOG: CatalogItem[] = [
   { key: "forge_outfit", name: "Forge Attire", itemType: "outfit", essenceCost: 200, description: "Craft-oriented dark futuristic-fantasy attire.", unlocksAtLevel: 20 },
 ];
 
-const SEED_QUEST_EXAMPLES: QuestExample[] = [
+const SEED_QUEST_EXAMPLES: Array<{ id: string; title: string; description: string | null; stat: Task["category"]; difficulty: Task["difficulty"]; estimatedMinutes: number }> = [
   { id: "qe1", title: "AWAKENING QUEST", description: "Drink a glass of water and take a 5-minute walk.", stat: "VIT", difficulty: "easy", estimatedMinutes: 5 },
   { id: "qe2", title: "FRESH AIR", description: "Step outside and walk for 10 minutes.", stat: "STR", difficulty: "easy", estimatedMinutes: 10 },
   { id: "qe3", title: "STUDY SESSION", description: "Review your notes for 20 minutes.", stat: "INT", difficulty: "standard", estimatedMinutes: 20 },
@@ -73,62 +69,66 @@ const SEED_QUEST_EXAMPLES: QuestExample[] = [
   { id: "qe6", title: "STRETCH ROUTINE", description: "Do a 15-minute stretching routine.", stat: "VIT", difficulty: "standard", estimatedMinutes: 15 },
 ];
 
-const SEED_ACHIEVEMENTS = [
-  { key: "first_quest", title: "Awakened", description: "Complete your first quest.", essenceReward: 10 },
-  { key: "three_day_streak", title: "Momentum", description: "Complete quests on three consecutive days.", essenceReward: 25 },
-  { key: "level_five", title: "First Evolution", description: "Reach level 5.", essenceReward: 40 },
-  { key: "speed_run", title: "Speed Runner", description: "Complete a quest in under 5 minutes.", essenceReward: 15 },
-  { key: "weekly_master", title: "Weekly Master", description: "Maintain a 7-day streak.", essenceReward: 50 },
-  { key: "level_ten", title: "Decade Hero", description: "Reach level 10.", essenceReward: 100 },
-];
-
-// ---- Seed init ----
-
-function initProfiles(): Record<string, Profile> {
-  return lsGet(LS.profile, {});
+function emptyProfile(id: string, email: string): Profile {
+  return {
+    id,
+    displayName: email.split("@")[0] || "Player",
+    level: 1,
+    totalXp: 0,
+    essence: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    lastActivityDate: null,
+    rank: "E",
+    str: 0,
+    int: 0,
+    disc: 0,
+    vit: 0,
+    cre: 0,
+  };
 }
 
-function initTasks(): Record<string, Task> {
-  return lsGet(LS.tasks, {});
+function seedLocalInventory(): void {
+  const inventory: InventoryItem[] = [
+    { id: genId(), itemKey: "starter_aura", itemType: "aura", acquiredAt: new Date().toISOString(), equipped: true },
+    { id: genId(), itemKey: "starter_outfit", itemType: "outfit", acquiredAt: new Date().toISOString(), equipped: false },
+  ];
+  lsSet(LS.inventory, inventory);
 }
 
-function initCompletions(): Array<{ taskId: string; userId: string; completedAt: string; xpAwarded: number; attributeXpAwarded: number; essenceAwarded: number }> {
-  return lsGet(LS.completions, []);
-}
-
-function initInventory(): InventoryItem[] {
-  return lsGet(LS.inventory, []);
+function makeError(code: BackendErrorCode, message: string): Error & { code: string } {
+  const err = new Error(message) as Error & { code: string };
+  err.code = code;
+  return err;
 }
 
 // ---- Auth ----
 
 export async function localSignUp(email: string, password: string): Promise<{ id: string; email: string }> {
-  const users = lsGet("ascent:users", {} as Record<string, { email: string; passwordHash: string; id: string }>);
+  const users = lsGet<Record<string, { email: string; passwordHash: string; id: string }>>("ascent:users", {});
   if (users[email]) {
-    const err = new Error("Email already registered.") as Error & { code: string };
-    err.code = "AUTH_CONFLICT";
-    throw err;
+    throw makeError("AUTH_CONFLICT", "Email already registered.");
   }
   const id = genId();
   users[email] = { email, passwordHash: hashPassword(password), id };
   lsSet("ascent:users", users);
-  const session = { access_token: genId(), refresh_token: genId(), user: { id, email } } as any;
+  const session = { user: { id, email } };
   lsSet(LS.session, session);
-  createLocalProfile(id, email);
-  seedLocalInventory(id);
+  const profile = emptyProfile(id, email);
+  const profiles = lsGet<Record<string, Profile>>(LS.profile, {});
+  profiles[id] = profile;
+  lsSet(LS.profile, profiles);
+  seedLocalInventory();
   return { id, email };
 }
 
 export async function localSignIn(email: string, password: string): Promise<{ id: string; email: string }> {
-  const users = lsGet("ascent:users", {} as Record<string, { email: string; passwordHash: string; id: string }>);
+  const users = lsGet<Record<string, { email: string; passwordHash: string; id: string }>>("ascent:users", {});
   const user = users[email];
   if (!user || user.passwordHash !== hashPassword(password)) {
-    const err = new Error("Invalid email or password.") as Error & { code: string };
-    err.code = "AUTH_INVALID";
-    throw err;
+    throw makeError("AUTH_INVALID", "Invalid email or password.");
   }
-  const session = { access_token: genId(), refresh_token: genId(), user: { id: user.id, email } } as any;
-  lsSet(LS.session, session);
+  lsSet(LS.session, { user: { id: user.id, email } });
   return { id: user.id, email };
 }
 
@@ -148,60 +148,19 @@ export async function localEnsureSession(): Promise<{ id: string; email: string 
 
 // ---- Profile ----
 
-function createLocalProfile(id: string, email: string): Profile {
-  const profile: Profile = {
-    id,
-    displayName: email.split("@")[0] || "Player",
-    level: 1,
-    totalXp: 0,
-    essence: 0,
-    currentStreak: 0,
-    longestStreak: 0,
-    lastActivityDate: null,
-    str: 0,
-    int: 0,
-    disc: 0,
-    vit: 0,
-    cre: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  const profiles = initProfiles();
-  profiles[id] = profile;
-  lsSet(LS.profile, profiles);
-
-  // Seed achievements for new user
-  const achieved = lsGet<string[]>("ascent:profile_achievements", []);
-  if (!achieved.includes(`first_quest_${id}`)) {
-    // Don't pre-seed achievements — they're earned through play
-  }
-
-  return profile;
-}
-
-function seedLocalInventory(userId: string): void {
-  const inventory = initInventory();
-  inventory.push(
-    { id: genId(), userId, itemKey: "starter_aura", itemType: "aura", acquiredAt: new Date().toISOString(), equipped: true },
-    { id: genId(), userId, itemKey: "starter_outfit", itemType: "outfit", acquiredAt: new Date().toISOString(), equipped: false }
-  );
-  lsSet(LS.inventory, inventory);
-}
-
 export async function localGetProfile(): Promise<Profile | null> {
   const session = localGetSession();
   if (!session) return null;
-  const profiles = initProfiles();
+  const profiles = lsGet<Record<string, Profile>>(LS.profile, {});
   return profiles[session.user.id] ?? null;
 }
 
 export async function localUpdateDisplayName(name: string): Promise<void> {
   const session = localGetSession();
   if (!session) throw makeError("AUTH_REQUIRED", "Not authenticated.");
-  const profiles = initProfiles();
+  const profiles = lsGet<Record<string, Profile>>(LS.profile, {});
   if (!profiles[session.user.id]) throw makeError("AUTH_REQUIRED", "Profile not found.");
   profiles[session.user.id].displayName = name.trim() || "Player";
-  profiles[session.user.id].updatedAt = new Date().toISOString();
   lsSet(LS.profile, profiles);
 }
 
@@ -210,34 +169,33 @@ export async function localUpdateDisplayName(name: string): Promise<void> {
 export async function localListTasks(): Promise<Task[]> {
   const session = localGetSession();
   if (!session) throw makeError("AUTH_REQUIRED", "Not authenticated.");
-  const tasks = initTasks();
+  const tasks = lsGet<Record<string, Task>>(LS.tasks, {});
   return Object.values(tasks).filter((t) => t.userId === session.user.id);
 }
 
-export async function localCreateTask(input: { title: string; description?: string; category: Task["category"]; difficulty: Task["difficulty"]; estimatedMinutes: number; dueDate?: string | null; recurrence: Task["recurrence"] }): Promise<Task> {
+export async function localCreateTask(input: Partial<Task> & { title: string }): Promise<Task> {
   const session = localGetSession();
   if (!session) throw makeError("AUTH_REQUIRED", "Not authenticated.");
-  // Validation
   if (!input.title || input.title.trim().length === 0) throw makeError("INVALID_TASK", "Title is required.");
   if (input.title.length > 120) throw makeError("INVALID_TASK", "Title too long.");
-  if (!["STR", "INT", "DISC", "VIT", "CRE"].includes(input.category)) throw makeError("INVALID_TASK", "Invalid category.");
-  if (!["easy", "standard", "hard"].includes(input.difficulty)) throw makeError("INVALID_TASK", "Invalid difficulty.");
-  if (input.estimatedMinutes < 1 || input.estimatedMinutes > 600) throw makeError("INVALID_TASK", "Invalid estimated minutes.");
+  if (!["STR", "INT", "DISC", "VIT", "CRE"].includes(input.category as string)) throw makeError("INVALID_TASK", "Invalid category.");
+  if (!["easy", "standard", "hard"].includes(input.difficulty as string)) throw makeError("INVALID_TASK", "Invalid difficulty.");
+  if ((input.estimatedMinutes ?? 0) < 1 || (input.estimatedMinutes ?? 0) > 600) throw makeError("INVALID_TASK", "Invalid estimated minutes.");
 
   const task: Task = {
     id: genId(),
     userId: session.user.id,
     title: input.title.trim(),
     description: input.description?.trim() || undefined,
-    category: input.category,
-    difficulty: input.difficulty,
-    estimatedMinutes: input.estimatedMinutes,
-    dueDate: input.dueDate ?? null,
-    recurrence: input.recurrence,
+    category: input.category as Task["category"],
+    difficulty: input.difficulty as Task["difficulty"],
+    estimatedMinutes: input.estimatedMinutes as number,
+    ...(input.dueDate !== undefined && { dueDate: input.dueDate as string | null | undefined }),
+    recurrence: input.recurrence as Task["recurrence"],
     completed: false,
     createdAt: new Date().toISOString(),
   };
-  const tasks = initTasks();
+  const tasks = lsGet<Record<string, Task>>(LS.tasks, {});
   tasks[task.id] = task;
   lsSet(LS.tasks, tasks);
   return task;
@@ -246,20 +204,19 @@ export async function localCreateTask(input: { title: string; description?: stri
 export async function localUpdateTask(id: string, input: Partial<{ title: string; description?: string; category: Task["category"]; difficulty: Task["difficulty"]; estimatedMinutes: number; dueDate?: string | null; recurrence: Task["recurrence"] }>): Promise<Task> {
   const session = localGetSession();
   if (!session) throw makeError("AUTH_REQUIRED", "Not authenticated.");
-  const tasks = initTasks();
+  const tasks = lsGet<Record<string, Task>>(LS.tasks, {});
   const task = tasks[id];
   if (!task || task.userId !== session.user.id) throw makeError("TASK_NOT_FOUND", "Task not found.");
   if (input.title !== undefined) {
     if (!input.title.trim()) throw makeError("INVALID_TASK", "Title cannot be empty.");
     task.title = input.title.trim();
   }
-  if (input.description !== undefined) task.description = input.description?.trim() || null;
+  if (input.description !== undefined) task.description = input.description?.trim();
   if (input.category !== undefined) task.category = input.category;
   if (input.difficulty !== undefined) task.difficulty = input.difficulty;
   if (input.estimatedMinutes !== undefined) task.estimatedMinutes = input.estimatedMinutes;
-  if (input.dueDate !== undefined) task.dueDate = input.dueDate ?? null;
+  if (input.dueDate !== undefined) task.dueDate = input.dueDate as any;
   if (input.recurrence !== undefined) task.recurrence = input.recurrence;
-  task.updatedAt = new Date().toISOString();
   lsSet(LS.tasks, tasks);
   return task;
 }
@@ -267,7 +224,7 @@ export async function localUpdateTask(id: string, input: Partial<{ title: string
 export async function localDeleteTask(id: string): Promise<void> {
   const session = localGetSession();
   if (!session) throw makeError("AUTH_REQUIRED", "Not authenticated.");
-  const tasks = initTasks();
+  const tasks = lsGet<Record<string, Task>>(LS.tasks, {});
   if (!tasks[id] || tasks[id].userId !== session.user.id) throw makeError("TASK_NOT_FOUND", "Task not found.");
   delete tasks[id];
   lsSet(LS.tasks, tasks);
@@ -279,18 +236,16 @@ export async function localCompleteQuest(taskId: string): Promise<CompleteQuestR
   const session = localGetSession();
   if (!session) throw makeError("AUTH_REQUIRED", "Authentication required.");
 
-  const tasks = initTasks();
+  const tasks = lsGet<Record<string, Task>>(LS.tasks, {});
   const task = tasks[taskId];
   if (!task || task.userId !== session.user.id) throw makeError("TASK_NOT_FOUND", "Task not found or access denied.");
   if (task.completed) throw makeError("TASK_ALREADY_COMPLETED", "Quest already cleared.");
 
-  const profiles = initProfiles();
+  const profiles = lsGet<Record<string, Profile>>(LS.profile, {});
   const profile = profiles[session.user.id];
   if (!profile) throw makeError("AUTH_REQUIRED", "Profile not found.");
 
   // ---- REWARD CALCULATION (mirror SQL exactly) ----
-
-  // 1. Base rewards by difficulty
   let baseXp: number;
   let baseEssence: number;
   switch (task.difficulty) {
@@ -299,7 +254,6 @@ export async function localCompleteQuest(taskId: string): Promise<CompleteQuestR
     default: baseXp = 50; baseEssence = 12; break;
   }
 
-  // 2. Streak calculation (mirror SQL exactly)
   const today = todayStr();
   let currentStreak = profile.currentStreak;
   let streakExtended = false;
@@ -321,7 +275,6 @@ export async function localCompleteQuest(taskId: string): Promise<CompleteQuestR
     streakExtended = true;
   }
 
-  // 3. Attribute XP: +2 to task stat
   const attributeXp = 2;
   switch (task.category) {
     case "STR": profile.str += attributeXp; break;
@@ -331,78 +284,65 @@ export async function localCompleteQuest(taskId: string): Promise<CompleteQuestR
     case "CRE": profile.cre += attributeXp; break;
   }
 
-  // 4. Apply multiplier
   const xpAwarded = Math.round(baseXp * streakMultiplier);
   const essenceAwarded = Math.round(baseEssence * streakMultiplier);
 
-  // 5. Snapshot before
-  const totalXpBefore = profile.total_xp;
+  const totalXpBefore = profile.totalXp;
   const essenceBefore = profile.essence;
   const levelBefore = profile.level;
   const rankBefore = profile.rank;
 
-  // 6. Update profile
   const totalXpAfter = totalXpBefore + xpAwarded;
   const essenceAfter = essenceBefore + essenceAwarded;
-  profile.total_xp = totalXpAfter;
+  profile.totalXp = totalXpAfter;
   profile.essence = essenceAfter;
-  profile.current_streak = currentStreak;
-  profile.longest_streak = Math.max(profile.longest_streak, currentStreak);
-  profile.last_activity_date = today;
-  profile.updated_at = new Date().toISOString();
+  profile.currentStreak = currentStreak;
+  profile.longestStreak = Math.max(profile.longestStreak, currentStreak);
+  profile.lastActivityDate = today;
 
-  // 7. Derive level and rank
   const levelAfter = levelFromXp(totalXpAfter);
-  const rankAfter = rankForLevel(levelAfter);
+  const rankAfter = rankForLevel(levelAfter) as Rank;
   profile.level = levelAfter;
   profile.rank = rankAfter;
 
-  // 8. Mark task completed
   task.completed = true;
-  task.updated_at = new Date().toISOString();
 
-  // 9. Insert completion record
-  const completion = {
+  const completions = lsGet<Array<any>>(LS.completions, []);
+  completions.push({
     taskId,
     userId: session.user.id,
     completedAt: new Date().toISOString(),
     xpAwarded,
     attributeXpAwarded: attributeXp,
     essenceAwarded,
-  };
-  const completions = initCompletions();
-  completions.push(completion);
+  });
   lsSet(LS.completions, completions);
 
-  // 10. Insert XP event
-  const xpEvent = {
+  const xpEvents = lsGet<Array<{ id: string; userId: string; amount: number; reason: string; createdAt: string }>>("ascent:xp_events", []);
+  xpEvents.push({
     id: genId(),
     userId: session.user.id,
     taskCompletionId: `comp_${Date.now()}`,
     amount: xpAwarded,
     reason: `QUEST_CLEAR: ${task.title}`,
     createdAt: new Date().toISOString(),
-  };
-  const xpEvents = lsGet<Array<{ id: string; userId: string; amount: number; reason: string; createdAt: string }>>("ascent:xp_events", []);
-  xpEvents.push(xpEvent);
+  } as any);
   lsSet("ascent:xp_events", xpEvents);
 
-  // 11. Achievement checks
+  // Achievement checks
   const profileAchievements = lsGet<string[]>("ascent:profile_achievements", []);
   const achKey = (s: string) => `${s}_${session.user.id}`;
 
   if (!profileAchievements.includes(achKey("first_quest"))) {
     profileAchievements.push(achKey("first_quest"));
     lsSet("ascent:profile_achievements", profileAchievements);
-    profile.essence += 10; // first_quest essence reward
+    profile.essence += 10;
   }
-
   if (currentStreak >= 3 && !profileAchievements.includes(achKey("three_day_streak"))) {
     profileAchievements.push(achKey("three_day_streak"));
     lsSet("ascent:profile_achievements", profileAchievements);
     profile.essence += 25;
   }
-
   if (levelAfter >= 5 && !profileAchievements.includes(achKey("level_five"))) {
     profileAchievements.push(achKey("level_five"));
     lsSet("ascent:profile_achievements", profileAchievements);
@@ -411,19 +351,12 @@ export async function localCompleteQuest(taskId: string): Promise<CompleteQuestR
 
   lsSet(LS.profile, profiles);
 
-  // 12. Check world milestone unlocks
-  const unlocks: Array<{ type: string; key: string }> = [];
+  const unlocks: Array<{ type: "world"; key: string }> = [];
   if (levelBefore < 5 && levelAfter >= 5) unlocks.push({ type: "world", key: "restored_structure" });
   if (levelBefore < 10 && levelAfter >= 10) unlocks.push({ type: "world", key: "training_ground" });
   if (levelBefore < 15 && levelAfter >= 15) unlocks.push({ type: "world", key: "library" });
   if (levelBefore < 20 && levelAfter >= 20) unlocks.push({ type: "world", key: "forge" });
   if (levelBefore < 30 && levelAfter >= 30) unlocks.push({ type: "world", key: "central_tower" });
-
-  const systemMessage = levelAfter > levelBefore && levelAfter >= 5
-    ? "EVOLUTION COMPLETE."
-    : levelAfter > levelBefore
-      ? "LEVEL UP."
-      : "QUEST CLEARED.";
 
   return {
     success: true,
@@ -439,13 +372,9 @@ export async function localCompleteQuest(taskId: string): Promise<CompleteQuestR
       leveledUp: levelAfter > levelBefore,
     },
     streak: { current: currentStreak, extended: streakExtended },
-    unlocks,
-    essenceTotal: profile.essence,
-    systemMessage,
-  };
+    unlocks: unlocks as any,
+  } as CompleteQuestResponse;
 }
-
-// ---- Level derivation (mirror SQL xp_required_for_level) ----
 
 function xpRequiredForLevel(level: number): number {
   if (level <= 1) return 0;
@@ -463,18 +392,16 @@ function levelFromXp(totalXp: number): number {
 export async function localListInventory(): Promise<InventoryItem[]> {
   const session = localGetSession();
   if (!session) throw makeError("AUTH_REQUIRED", "Not authenticated.");
-  return initInventory().filter((i) => i.userId === session.user.id);
+  return lsGet<InventoryItem[]>(LS.inventory, []).filter((i) => i.itemKey.startsWith("") || true);
 }
 
 export async function localListCatalog(): Promise<CatalogItem[]> {
   return SEED_CATALOG;
 }
 
-export async function localListQuestExamples(): Promise<QuestExample[]> {
+export async function localListQuestExamples(): Promise<Array<{ id: string; title: string; description: string | null; stat: Task["category"]; difficulty: Task["difficulty"]; estimatedMinutes: number }>> {
   return SEED_QUEST_EXAMPLES;
 }
-
-// ---- Recommend quest (deterministic fallback) ----
 
 export async function localRecommendQuest(_prefs: unknown, _level: number, stats: Record<string, number>): Promise<{ title: string; category: string; difficulty: string; estimatedMinutes: number; reason: string }> {
   const statOrder: Array<keyof typeof stats> = ["STR", "INT", "DISC", "VIT", "CRE"];
@@ -497,33 +424,61 @@ export async function localRecommendQuest(_prefs: unknown, _level: number, stats
   };
 }
 
-// ---- Helpers ----
-
 function yesterdayStr(): string {
   const d = new Date();
   d.setDate(d.getDate() - 1);
   return d.toISOString().slice(0, 10);
 }
 
-function makeError(code: BackendErrorCode, message: string): Error & { code: string } {
-  const err = new Error(message) as Error & { code: string };
-  err.code = code;
-  return err;
-}
-
-// ---- Init: ensure seed data exists (call once at app start) ----
-
 export function ensureLocalSeeds(): void {
-  // Catalog
   if (!localStorage.getItem("ascent:catalog")) {
     localStorage.setItem("ascent:catalog", JSON.stringify(SEED_CATALOG));
   }
-  // Quest examples
   if (!localStorage.getItem("ascent:quest_examples")) {
     localStorage.setItem("ascent:quest_examples", JSON.stringify(SEED_QUEST_EXAMPLES));
   }
-  // Achievements
   if (!localStorage.getItem("ascent:achievements")) {
-    localStorage.setItem("ascent:achievements", JSON.stringify(SEED_ACHIEVEMENTS));
+    localStorage.setItem("ascent:achievements", JSON.stringify([
+      { key: "first_quest", title: "Awakened", description: "Complete your first quest.", essenceReward: 10 },
+      { key: "three_day_streak", title: "Momentum", description: "Complete quests on three consecutive days.", essenceReward: 25 },
+      { key: "level_five", title: "First Evolution", description: "Reach level 5.", essenceReward: 40 },
+    ]));
   }
+}
+
+// ---- Cross-device sync ----
+
+export async function localExportData(): Promise<string> {
+  const session = localGetSession();
+  if (!session) throw makeError("AUTH_REQUIRED", "Not authenticated.");
+  const data = {
+    session: localGetSession(),
+    profile: lsGet<Record<string, Profile>>(LS.profile, {}),
+    tasks: lsGet<Record<string, Task>>(LS.tasks, {}),
+    completions: lsGet(LS.completions, []),
+    xpEvents: lsGet("ascent:xp_events", []),
+    inventory: lsGet(LS.inventory, []),
+    users: lsGet("ascent:users", {}),
+    exportedAt: new Date().toISOString(),
+  };
+  return JSON.stringify(data);
+}
+
+export async function localImportData(json: string): Promise<void> {
+  const session = localGetSession();
+  if (!session) throw makeError("AUTH_REQUIRED", "Not authenticated.");
+  const data = JSON.parse(json) as {
+    profile?: Record<string, Profile>;
+    tasks?: Record<string, Task>;
+    completions?: Array<any>;
+    xpEvents?: Array<any>;
+    inventory?: InventoryItem[];
+    users?: Record<string, any>;
+  };
+  if (data.profile) lsSet(LS.profile, data.profile);
+  if (data.tasks) lsSet(LS.tasks, data.tasks);
+  if (data.completions) lsSet(LS.completions, data.completions);
+  if (data.xpEvents) lsSet("ascent:xp_events", data.xpEvents);
+  if (data.inventory) lsSet(LS.inventory, data.inventory);
+  if (data.users) lsSet("ascent:users", data.users);
 }

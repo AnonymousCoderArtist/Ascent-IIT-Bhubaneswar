@@ -291,3 +291,28 @@ Prefer:
 2. `feat(backend): implement task crud and seed data`
 3. `feat(backend): implement transactional quest rewards`
 4. `feat(backend): add progression api and optional ai recommendation`
+5. `feat(local): add localStorage backend with exact reward math mirror`
+
+## Local Backend (cache on user PC)
+
+When Supabase env vars are absent (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY), the app switches to local mode backed by localStorage.
+
+Files:
+- `src/services/localBackend.ts` — localStorage-backed API mirror
+- `src/services/api.ts` — branches on env at each call
+
+Reward math MUST mirror supabase/migrations/002_functions.sql exactly:
+- easy: 25xp / 6ess
+- standard: 50 / 12
+- hard: 90 / 20
+- streak >=2: 1.05, >=3: 1.10, >=7: 1.15 (only extending from yesterday)
+- +2 attribute XP to task stat
+- xp_required_for_level = round(80 + 25L + 15 * L^1.35)
+- rank E/D/C/B/A/S at 6/11/21/36/51
+- world unlocks at 5/10/15/20/30
+- achievements first_quest/three_day_streak/level_five essence bonuses
+- unlocks array [{type:"world", key}]
+
+Cross-device: localExportData() / localImportData() for JSON sync.
+
+SQL truth: supabase/migrations/001..005 — local mode MUST mirror these.

@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { supabase } from "../lib/supabase";
-import { localGetSession, localSignIn, localSignOut as localLogout, type Session } from "./localBackend";
+import { localGetSession, localSignOut as localLogout } from "../services/localBackend";
 import type { Session as SupaSession } from "@supabase/supabase-js";
 
 interface AuthContextValue {
@@ -38,7 +37,6 @@ function toSupaSession(local: { user: { id: string; email: string } } | null): S
       confirmation_sent_at: null,
       recovered_at: null,
       last_sign_in_at: new Date().toISOString(),
-      role: "authenticated",
     } as any,
   };
 }

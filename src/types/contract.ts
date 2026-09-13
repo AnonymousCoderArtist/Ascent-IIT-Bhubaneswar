@@ -85,6 +85,24 @@ export interface InventoryItem {
   equipped: boolean;
 }
 
+export interface CatalogItem {
+  key: string;
+  name: string;
+  itemType: "aura" | "outfit" | "weapon" | "title" | "world";
+  essenceCost: number;
+  description: string | null;
+  unlocksAtLevel: number;
+}
+
+export interface QuestExample {
+  id: string;
+  title: string;
+  description: string | null;
+  stat: StatKey;
+  difficulty: Difficulty;
+  estimatedMinutes: number;
+}
+
 // Stable backend error codes (BACKEND_AGENT.md)
 export type BackendErrorCode =
   | "AUTH_REQUIRED"
@@ -92,4 +110,6 @@ export type BackendErrorCode =
   | "TASK_ALREADY_COMPLETED"
   | "INVALID_TASK"
   | "REWARD_TRANSACTION_FAILED"
-  | "AI_UNAVAILABLE";
+  | "AI_UNAVAILABLE"
+  | "AUTH_CONFLICT"
+  | "AUTH_INVALID";
