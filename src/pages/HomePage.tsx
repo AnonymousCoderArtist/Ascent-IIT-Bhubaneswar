@@ -18,7 +18,6 @@ import AmbientLayer from "../components/world/AmbientLayer";
 import SystemBoot from "../components/system/SystemBoot";
 import { StreakWeek, NextQuestNudge } from "../components/system/HabitHooks";
 import AiSettingsPanel from "../components/system/AiSettingsPanel";
-import { Dumbbell, BookOpen, CalendarCheck, HeartPulse, Sparkles } from "lucide-react";
 import RankRoadmap from "../components/system/RankRoadmap";
 import { useGameStore } from "../hooks/useGameStore";
 import { seedAwakeningQuestIfEmpty } from "../services/awakeningSeed";
