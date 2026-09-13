@@ -149,3 +149,30 @@ Only `character-l1.png` + `world-l1.webp` generated so far. `src/lib/milestones.
 
 - `npm run build` 0 errors; all routes 200.
 - Live end-to-end test of the exact production request (Gemini flash, thinkingBudget 0, 2048 tokens, JSON mode) returned 3 valid quests. Total dev key usage: 6 calls; key removed from the repo.
+
+## 2026-09-13 — Local backend + image processing
+
+### Local Backend
+
+- **Switched from Supabase to localStorage cache** per user request. When Supabase env vars are absent, app auto-switches to local mode.
+- **`src/services/localBackend.ts`**: localStorage-backed API mirror with auth (email/password hashed), profile, task CRUD, completion with EXACT reward math (easy 25/6, standard 50/12, hard 90/20, streak multipliers, attribute XP, achievements), level/rank derivation, world milestone unlocks, cross-device sync (export/import JSON).
+- **`src/services/api.ts`**: auto-branches between Supabase and local mode on each call.
+- **Auth**: local signup/login/logout in `AuthPage.tsx`, `useAuth.tsx` updated for local sessions.
+- **Cross-device login**: `localExportData()` / `localImportData()` for JSON sync.
+- **`ASCENT_MVP/agents/BACKEND_AGENT.md`**: updated with local backend docs and reward math spec.
+
+### Image Processing
+
+All images from `incoming/` processed into `public/`:
+- Characters (white bg removed, trimmed, resized): character-l1, l2, l7, l30
+- Worlds (resized to 1920, kept bg): world-l2, l5, l10, l15, l20, l30
+- Items: essence-crystal, badge-awakened, training-reward
+- Effects: streak-flame
+- Decorative: level-up-bg, awakening-bg
+- Fallback gen-* assets for unknown levels
+
+### Verification
+
+- `npm run build` passes (4.8s), 0 TypeScript errors.
+- All 19 image files committed to `public/`.
+- Ready for `npx vercel --prod` deployment.
