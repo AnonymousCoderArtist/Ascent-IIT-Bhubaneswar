@@ -162,41 +162,41 @@ export default function HomePage() {
           <LevelBar />
         </div>
 
-        {/* TODAY'S QUESTS — auto-height panel */}
-        <div className="absolute left-20 top-36 z-30 w-72 sm:left-24 sm:w-80 hidden sm:block">
-          <div className="hud-panel rounded-sm p-3">
-            <p className="font-display text-[10px] tracking-[0.3em] text-violet">TODAY'S QUESTS</p>
-            <div className="mt-2 space-y-1.5">
-              {active.length === 0 && cleared.length === 0 ? (
-                <p className="text-[10px] text-mist">No quests yet</p>
-              ) : (
-                [...active, ...cleared].map((task) => {
-                  const CatIcon = task.category === "STR" ? Dumbbell : task.category === "INT" ? BookOpen : task.category === "DISC" ? CalendarCheck : task.category === "VIT" ? HeartPulse : Sparkles;
-                  return (
-                    <div key={task.id} className={`flex items-center gap-2 rounded-sm border border-violet/10 bg-ink/50 p-2 ${task.completed ? "opacity-50" : ""}`}>
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-void/50 text-violet">
-                        <CatIcon size={13} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className={`truncate text-xs font-semibold ${task.completed ? "text-mist line-through" : "text-ivory"}`}>
-                          {task.title}
-                        </p>
-                        <p className="text-[9px] text-mist">{task.difficulty} · {task.estimatedMinutes}m</p>
-                      </div>
-                      {!task.completed && (
-                        <button
-                          onClick={() => {}}
-                          aria-label="Complete quest"
-                          className="shrink-0 rounded-sm border border-violet/50 bg-violet px-2 py-0.5 text-[9px] font-display font-bold tracking-widest text-ivory"
-                        >
-                          CLEAR
-                        </button>
-                      )}
-                    </div>
-                  );
-                })
-              )}
+        {/* TODAY'S QUESTS + habits — left panel */}
+        <div className="absolute left-20 top-36 bottom-20 z-30 w-80 sm:left-24 sm:w-96 hidden sm:block overflow-y-auto">
+          <div className="hud-panel rounded-sm p-4">
+            <div className="flex items-center justify-between">
+              <p className="font-display text-[10px] tracking-[0.3em] text-violet">TODAY'S QUESTS</p>
+              <div className="flex items-center gap-2">
+                {aiReady ? (
+                  <span className="rounded-full border border-arc/40 bg-arc/10 px-2 py-0.5 text-[9px] font-bold tracking-widest text-arc">AI DAILY</span>
+                ) : (
+                  <button onClick={() => setAiOpen(true)} className="font-display rounded-full border border-arc/40 bg-arc/10 px-2 py-0.5 text-[9px] font-bold tracking-widest text-arc transition-colors hover:bg-arc/25">+ AI KEY</button>
+                )}
+                <span className="text-[10px] tabular-nums text-mist">{active.length} active · {cleared.length} cleared</span>
+              </div>
             </div>
+            {active.length === 0 && cleared.length === 0 ? (
+              <div className="mt-3 flex flex-col items-center rounded-sm border border-violet/10 bg-ink/50 p-6 text-center">
+                <p className="text-xs text-mist">No quests registered. The System awaits your first command.</p>
+                <button onClick={() => setFormState({ open: true, task: null })} className="mt-3 font-display rounded-sm border border-violet/50 bg-violet px-4 py-2 text-[10px] uppercase tracking-widest text-ivory">REGISTER FIRST QUEST</button>
+              </div>
+            ) : (
+              <>
+                <ul className="mt-3 space-y-2">
+                  <AnimatePresence initial={false}>
+                    {[...active, ...cleared].map((task) => (
+                      <QuestCard key={task.id} task={task} onEdit={(t) => setFormState({ open: true, task: t })} onDelete={(t) => { if (confirm(`Delete "${t.title}"?`)) removeTask(t.id); }} />
+                    ))}
+                  </AnimatePresence>
+                </ul>
+                <button onClick={generateMore} disabled={generating} className="mt-3 flex w-full items-center justify-center rounded-sm border border-arc/50 bg-arc/15 px-4 py-2.5 text-[10px] uppercase tracking-widest text-arc transition-colors hover:bg-arc/30 disabled:opacity-50">{generating ? "GENERATING..." : aiReady ? "GENERATE NEW QUESTS [AI]" : "GENERATE NEW QUESTS"}</button>
+                <div className="mt-4 flex flex-col gap-3">
+                  <StreakWeek />
+                  <NextQuestNudge onRegister={() => setFormState({ open: true, task: null })} />
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -211,8 +211,8 @@ export default function HomePage() {
         </motion.div>
       </div>
 
-      {/* Habit zone: streak week + nudge + today's quests */}
-      <section aria-label="Today's quests" className="relative mx-auto max-w-2xl px-4 pb-16 pt-10">
+      {/* Habit zone (visible on mobile only; desktop uses left panel) */}
+      <section aria-label="Today's quests" className="relative mx-auto max-w-2xl px-4 pb-16 pt-10 sm:hidden">
         <div className="grid gap-4 md:grid-cols-[1fr_240px]">
           <div>
             <div className="flex items-center justify-between">
