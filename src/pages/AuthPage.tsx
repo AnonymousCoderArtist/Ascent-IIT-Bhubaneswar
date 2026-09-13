@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { localSignUp, localSignIn, localGetSession } from "../services/localBackend";
+import { useAuth } from "../hooks/useAuth";
 import Button from "../components/ui/Button";
 
 export default function AuthPage() {
@@ -10,6 +11,7 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
+  const { refreshSession } = useAuth();
 
   useEffect(() => {
     const session = localGetSession();
@@ -26,6 +28,7 @@ export default function AuthPage() {
       } else {
         await localSignIn(email, password);
       }
+      await refreshSession();
       navigate("/awakening", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Authentication failed.");
